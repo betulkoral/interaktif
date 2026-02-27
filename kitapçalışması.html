@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitapkolik Okuma Etkinlik Kitapçığı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Quicksand:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #f0f9ff;
+        }
+        h1, h2, h3 {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .book-card {
+            transition: transform 0.3s ease;
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+        }
+        .confetti-btn:active {
+            transform: scale(0.95);
+        }
+        @media print {
+            .no-print { display: none; }
+            .print-area { display: block; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border-4 border-yellow-400">
+        <!-- Header -->
+        <header class="bg-yellow-400 p-6 text-center">
+            <h1 class="text-3xl md:text-4xl text-blue-800 font-bold mb-2">📚 Kitap Dostu Etkinlik Kitapçığı</h1>
+            <p class="text-blue-900 font-medium">Okuduğun kitapları keşfet, düşüncelerini paylaş!</p>
+        </header>
+
+        <!-- Student Info -->
+        <section class="p-6 bg-yellow-50 border-b border-yellow-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" placeholder="Adın Soyadın" class="p-3 rounded-xl border-2 border-yellow-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <input type="text" placeholder="Sınıfın ve Numaran" class="p-3 rounded-xl border-2 border-yellow-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+        </section>
+
+        <!-- Book Selection -->
+        <main class="p-6">
+            <h2 class="text-2xl text-blue-700 mb-6 flex items-center">
+                <i class="fas fa-star text-yellow-500 mr-2"></i> Okuduğun Kitabı Seç:
+            </h2>
+            
+            <div id="bookGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Books will be injected here -->
+            </div>
+
+            <!-- Active Activity Area -->
+            <div id="activitySection" class="mt-12 hidden border-t-4 border-dashed border-blue-200 pt-8">
+                <div id="activityContent" class="bg-blue-50 rounded-2xl p-8 border-2 border-blue-200">
+                    <!-- Dynamic Activity Content -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer Actions -->
+        <footer class="p-6 bg-gray-50 flex flex-wrap justify-center gap-4 no-print">
+            <button onclick="window.print()" class="bg-blue-600 text-white px-6 py-3 rounded-full font-bold hover:bg-blue-700 transition">
+                <i class="fas fa-print mr-2"></i> Kitapçığı Yazdır
+            </button>
+            <button onclick="alert('Harika! Tüm yanıtların kaydedildi.')" class="bg-green-500 text-white px-6 py-3 rounded-full font-bold hover:bg-green-600 transition">
+                <i class="fas fa-save mr-2"></i> Çalışmamı Tamamladım
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        const books = [
+            {
+                id: 1,
+                title: "Küçük Prens",
+                author: "A. de Saint-Exupéry",
+                color: "bg-indigo-100",
+                icon: "👑",
+                question: "Küçük Prens'in ziyaret ettiği gezegenlerden birini sen tasarlasaydın, o gezegende kim yaşardı ve en ilginç özelliği ne olurdu?"
+            },
+            {
+                id: 2,
+                title: "Charlie’nin Çikolata Fabrikası",
+                author: "Roald Dahl",
+                color: "bg-orange-100",
+                icon: "🍫",
+                question: "Willy Wonka sana yeni bir çikolata icat etme şansı verseydi; tadı neye benzerdi ve yiyen kişiye hangi 'sihirli' özelliği verirdi?"
+            },
+            {
+                id: 3,
+                title: "Küçük Kara Balık",
+                author: "Samed Behrengi",
+                color: "bg-blue-100",
+                icon: "🐟",
+                question: "Küçük Kara Balık'ın yerinde olsaydın, dereyi terk edip denize açılır mıydın? Neden? Karşılaşacağın ilk macerayı anlat."
+            },
+            {
+                id: 4,
+                title: "Güneşi Bile Tamir Eden Adam",
+                author: "Behiç Ak",
+                color: "bg-yellow-100",
+                icon: "☀️",
+                question: "Eğer senin de her şeyi (eşyaları hatta kırık kalpleri) tamir etme gücün olsaydı, dünyada ilk neyi tamir etmek isterdin?"
+            },
+            {
+                id: 5,
+                title: "Momo",
+                author: "Michael Ende",
+                color: "bg-purple-100",
+                icon: "🐢",
+                question: "Duman Adamlar senin zamanını çalmaya çalışsa, onları durdurmak için ne yapardın?"
+            },
+            {
+                id: 6,
+                title: "Pinokyo",
+                author: "Carlo Collodi",
+                color: "bg-red-100",
+                icon: "🤥",
+                question: "Pinokyo'ya dürüst olmanın neden önemli olduğunu anlatan bir öğüt verecek olsan bu ne olurdu?"
+            }
+        ];
+
+        const bookGrid = document.getElementById('bookGrid');
+        const activitySection = document.getElementById('activitySection');
+        const activityContent = document.getElementById('activityContent');
+
+        function initBooks() {
+            books.forEach(book => {
+                const card = document.createElement('div');
+                card.className = `book-card ${book.color} p-6 rounded-2xl cursor-pointer border-2 border-transparent hover:border-blue-400 shadow-md flex flex-col items-center text-center`;
+                card.onclick = () => showActivity(book);
+                card.innerHTML = `
+                    <span class="text-4xl mb-3">${book.icon}</span>
+                    <h3 class="font-bold text-lg text-gray-800">${book.title}</h3>
+                    <p class="text-sm text-gray-600">${book.author}</p>
+                `;
+                bookGrid.appendChild(card);
+            });
+        }
+
+        function showActivity(book) {
+            activitySection.classList.remove('hidden');
+            activityContent.innerHTML = `
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-blue-800 underline decoration-yellow-400 decoration-4 mb-2">${book.title} - Etkinlik</h3>
+                        <p class="text-blue-600 italic">Yazar: ${book.author}</p>
+                    </div>
+                    <button onclick="closeActivity()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Rating -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm">
+                        <label class="block font-bold text-gray-700 mb-2">Bu kitabı ne kadar sevdin?</label>
+                        <div class="flex gap-4 text-2xl">
+                            <i class="far fa-star text-yellow-400 cursor-pointer hover:fas"></i>
+                            <i class="far fa-star text-yellow-400 cursor-pointer hover:fas"></i>
+                            <i class="far fa-star text-yellow-400 cursor-pointer hover:fas"></i>
+                            <i class="far fa-star text-yellow-400 cursor-pointer hover:fas"></i>
+                            <i class="far fa-star text-yellow-400 cursor-pointer hover:fas"></i>
+                        </div>
+                    </div>
+
+                    <!-- Character Section -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm">
+                        <label class="block font-bold text-gray-700 mb-2">Kitaptaki en sevdiğin karakter kim? Neden?</label>
+                        <textarea class="w-full p-3 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-400" rows="2"></textarea>
+                    </div>
+
+                    <!-- Creative Question -->
+                    <div class="bg-yellow-100 p-6 rounded-xl border-l-8 border-yellow-400 shadow-sm">
+                        <label class="block font-bold text-blue-900 mb-3"><i class="fas fa-lightbulb text-yellow-600 mr-2"></i>Düşünelim ve Yazalım:</label>
+                        <p class="text-gray-800 mb-4 font-medium">${book.question}</p>
+                        <textarea class="w-full p-4 bg-white border-none rounded-lg focus:ring-2 focus:ring-yellow-400" rows="5" placeholder="Yanıtını buraya yazabilirsin..."></textarea>
+                    </div>
+
+                    <!-- Drawing Space -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-2 border-dashed border-gray-300 h-48 flex flex-col items-center justify-center text-gray-400">
+                        <i class="fas fa-pencil-alt text-2xl mb-2"></i>
+                        <p>Buraya kitapla ilgili bir resim çizebilirsin (Çıktı aldıktan sonra)</p>
+                    </div>
+                </div>
+            `;
+            // Smooth scroll to activity
+            activitySection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function closeActivity() {
+            activitySection.classList.add('hidden');
+        }
+
+        initBooks();
+    </script>
+</body>
+</html>

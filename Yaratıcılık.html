@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaratıcılık Etkinlik Atölyesi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PDF Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            background-color: #f0f4f8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            touch-action: none;
+            cursor: crosshair;
+            background: white;
+            border-radius: 12px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .active-tool {
+            background-color: #3b82f6 !important;
+            color: white !important;
+        }
+        #activityInstructionDisplay {
+            line-height: 1.4;
+            text-shadow: 1px 1px 0px white;
+        }
+        .login-overlay {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center login-overlay p-4">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center">
+            <div class="text-6xl mb-4">🎨</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Hoş Geldin Genç Sanatçı!</h2>
+            <p class="text-gray-500 mb-6">Etkinliklere başlamadan önce lütfen adını yaz.</p>
+            <input type="text" id="studentNameInput" class="w-full p-4 border-2 border-purple-100 rounded-xl mb-4 focus:border-purple-500 outline-none text-center text-xl font-semibold" placeholder="Adın ve Soyadın">
+            <button id="startBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95">
+                Başla 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center shadow-inner">
+                <span class="text-2xl">🎨</span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Yaratıcılık Atölyesi</h1>
+                <p class="text-xs text-gray-500"><span id="studentDisplay">Öğrenci</span> | <span id="page-title">Yükleniyor...</span></p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button id="prevBtn" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">⬅️</button>
+            <span id="pageCounter" class="flex items-center font-semibold text-gray-700 px-2">1 / 8</span>
+            <button id="nextBtn" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">➡️</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col md:flex-row p-4 gap-4 max-w-7xl mx-auto w-full">
+        
+        <!-- Drawing Area -->
+        <div class="flex-1 bg-white p-4 rounded-2xl shadow-lg flex flex-col">
+            <!-- Instruction Area -->
+            <div class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-xl">
+                <h2 id="activityInstructionDisplay" class="text-xl md:text-2xl font-bold text-blue-900 italic">
+                    Yükleniyor...
+                </h2>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-4 items-center justify-between">
+                <div class="flex gap-2">
+                    <button id="penBtn" class="p-2 bg-gray-100 rounded-lg active-tool" title="Kalem">✏️</button>
+                    <button id="eraserBtn" class="p-2 bg-gray-100 rounded-lg" title="Silgi">🧽</button>
+                    <input type="color" id="colorPicker" class="w-10 h-10 border-none cursor-pointer bg-transparent" value="#000000">
+                    <select id="sizePicker" class="bg-gray-100 rounded-lg px-2 text-sm">
+                        <option value="2">İnce</option>
+                        <option value="5" selected>Orta</option>
+                        <option value="10">Kalın</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button id="clearBtn" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition-all">Temizle</button>
+                    <!-- Special Save Button only for Last Page via JS -->
+                    <button id="pdfBtn" class="hidden px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-bold transition-all shadow-md">Kitapçığı PDF Olarak İndir 📥</button>
+                </div>
+            </div>
+
+            <div id="canvasContainer" class="flex-1 relative border-2 border-dashed border-gray-200 rounded-xl overflow-hidden bg-white">
+                <canvas id="mainCanvas" class="relative z-10"></canvas>
+            </div>
+            <div id="hintText" class="mt-2 text-sm text-blue-600 font-medium hidden italic"></div>
+        </div>
+
+        <!-- Writing Area -->
+        <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow-lg flex flex-col border-t-4 border-yellow-400">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
+                <span>📝</span> Düşüncelerini Yaz
+            </h3>
+            <textarea id="notesArea" class="flex-1 p-4 bg-yellow-50 border-none rounded-xl focus:ring-2 focus:ring-yellow-400 resize-none text-gray-700 leading-relaxed text-lg" placeholder="Aklına gelenleri buraya yazabilirsin..."></textarea>
+            <div class="mt-4 text-xs text-gray-400 text-center">
+                Notların otomatik olarak her sayfaya kaydedilir.
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvasContainer');
+        const notesArea = document.getElementById('notesArea');
+        const pageTitle = document.getElementById('page-title');
+        const pageCounter = document.getElementById('pageCounter');
+        const activityInstructionDisplay = document.getElementById('activityInstructionDisplay');
+        const hintText = document.getElementById('hintText');
+        const studentNameInput = document.getElementById('studentNameInput');
+        const studentDisplay = document.getElementById('studentDisplay');
+        const pdfBtn = document.getElementById('pdfBtn');
+
+        let studentName = "";
+        let drawing = false;
+        let currentTool = 'pen';
+        let currentPage = 0;
+
+        let pagesData = [
+            { title: "Etkinlik 1", instruction: "Soğuk şeyler bana şunları hatırlatır:", notes: "", drawing: null },
+            { title: "Etkinlik 2", instruction: "Sıcak şeyler bana şunları hatırlatır:", notes: "", drawing: null },
+            { title: "Etkinlik 3", instruction: "Aşağıdaki şekle istediğin kadar farklı çizgi veya şekiller ekleyerek anlamlı bir şeyler çizmeye çalış:", notes: "", drawing: null, isShapeChallenge: true, hint: "💡 Bu yarım daire sence neye dönüşebilir?" },
+            { title: "Etkinlik 4", instruction: "Bir resim çiz ve içinde gizli yerlere saklanmış bir yıldız, bir daire ve bir üçgen olsun:", notes: "", drawing: null, isHiddenItemsChallenge: true, hint: "🌟 Yıldız, Daire ve Üçgen'i gizlemeyi unutma!" },
+            { title: "Etkinlik 5", instruction: "Aşağıdaki kişiyi özel bir mesleğe uygun bir şekilde giydir:", notes: "", drawing: null, isHumanSilhouette: true, hint: "👷‍♂️ Bu kişi hangi mesleği yapıyor?" },
+            { title: "Etkinlik 6", instruction: "Yeniden Dönüştürüyoruz: Aşağıdaki malzemeleri yeni bir amaçla nasıl kullanabileceğimizi yazın veya çizin.", notes: "", drawing: null, isRecycleChallenge: true, hint: "♻️ Geniş alanları kullanarak yeni fikirlerini çiz!" },
+            { title: "Etkinlik 7", instruction: "Sadece çocuklara özel hazırlanmış bir TV programı düşünün. Nasıl olurdu? Çizin veya yazın.", notes: "", drawing: null, isTvChallenge: true, hint: "📺 Hayalindeki kanalda ne yayınlanırdı?" },
+            { title: "Etkinlik 8", instruction: "Bugün kendini nasıl hissediyorsun? Çiz ve anlat:", notes: "", drawing: null }
+        ];
+
+        // Login Logic
+        document.getElementById('startBtn').onclick = () => {
+            if (studentNameInput.value.trim() === "") {
+                alert("Lütfen devam etmek için adınızı girin.");
+                return;
+            }
+            studentName = studentNameInput.value.trim();
+            studentDisplay.innerText = studentName;
+            document.getElementById('loginScreen').style.display = 'none';
+            resizeCanvas();
+        };
+
+        function resizeCanvas() {
+            const rect = container.getBoundingClientRect();
+            const tempDrawing = canvas.toDataURL();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            loadCurrentPage(tempDrawing);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // Drawing Logic
+        function startDrawing(e) { drawing = true; draw(e); }
+        function stopDrawing() { drawing = false; ctx.beginPath(); savePageDrawing(); }
+        function draw(e) {
+            if (!drawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            ctx.lineWidth = document.getElementById('sizePicker').value;
+            ctx.lineCap = 'round';
+            if (currentTool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = 30;
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = document.getElementById('colorPicker').value;
+            }
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); }, {passive: false});
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, {passive: false});
+        canvas.addEventListener('touchend', stopDrawing);
+
+        document.getElementById('penBtn').onclick = () => {
+            currentTool = 'pen';
+            document.getElementById('penBtn').classList.add('active-tool');
+            document.getElementById('eraserBtn').classList.remove('active-tool');
+        };
+
+        document.getElementById('eraserBtn').onclick = () => {
+            currentTool = 'eraser';
+            document.getElementById('eraserBtn').classList.add('active-tool');
+            document.getElementById('penBtn').classList.remove('active-tool');
+        };
+
+        document.getElementById('clearBtn').onclick = () => {
+            if(confirm('Temizlemek istediğine emin misin?')) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                loadCurrentPage(null, true);
+            }
+        };
+
+        function savePageDrawing() {
+            pagesData[currentPage].drawing = canvas.toDataURL();
+            pagesData[currentPage].notes = notesArea.value;
+        }
+
+        function loadCurrentPage(restoreData = null, forceClear = false) {
+            if (!forceClear) ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const data = pagesData[currentPage];
+            
+            // Base Layers
+            if (data.isShapeChallenge) drawBaseShape();
+            if (data.isHumanSilhouette) drawHumanSilhouette();
+            if (data.isRecycleChallenge) drawRecycleItems();
+            if (data.isTvChallenge) drawTvScreen();
+
+            const source = restoreData || data.drawing;
+            if (source && source !== "data:,") {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = source;
+            }
+
+            // UI Updates
+            pageTitle.innerText = data.title;
+            activityInstructionDisplay.innerText = data.instruction;
+            pageCounter.innerText = `${currentPage + 1} / ${pagesData.length}`;
+            notesArea.value = data.notes;
+            hintText.innerText = data.hint || "";
+            data.hint ? hintText.classList.remove('hidden') : hintText.classList.add('hidden');
+
+            // PDF Button visibility only on last page
+            if (currentPage === pagesData.length - 1) {
+                pdfBtn.classList.remove('hidden');
+            } else {
+                pdfBtn.classList.add('hidden');
+            }
+        }
+
+        // Template Drawings
+        function drawBaseShape() {
+            ctx.strokeStyle = "#cbd5e1"; ctx.lineWidth = 5; ctx.setLineDash([]);
+            ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2 + 50, Math.min(canvas.width, canvas.height)*0.35, Math.PI, 0); ctx.stroke();
+        }
+
+        function drawTvScreen() {
+            const w = canvas.width; const h = canvas.height;
+            const tvW = w * 0.8; const tvH = h * 0.7;
+            const x = (w - tvW) / 2; const y = (h - tvH) / 2 - 20;
+            ctx.strokeStyle = "#475569"; ctx.lineWidth = 15; ctx.setLineDash([]);
+            ctx.strokeRect(x, y, tvW, tvH);
+            ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + tvW/2, y); ctx.lineTo(x + tvW/2 - 50, y - 60); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + tvW/2, y); ctx.lineTo(x + tvW/2 + 50, y - 60); ctx.stroke();
+        }
+
+        function drawRecycleItems() {
+            const w = canvas.width; const h = canvas.height; const spacing = w / 4;
+            const itemY = h * 0.18; const boxWidth = w * 0.23; const boxHeight = h * 0.58;
+            ctx.textAlign = "center";
+            const drawBox = (x, label) => {
+                ctx.fillStyle = "#1e40af"; ctx.font = "bold 16px sans-serif"; ctx.fillText(label, x, itemY - 55);
+                ctx.strokeStyle = "#cbd5e1"; ctx.lineWidth = 2; ctx.setLineDash([8, 4]);
+                ctx.strokeRect(x - boxWidth/2, h * 0.35, boxWidth, boxHeight); ctx.setLineDash([]);
+            };
+            drawBox(spacing * 1, "İP"); drawBox(spacing * 2, "ÇORAP"); drawBox(spacing * 3, "ŞİŞE KAPAĞI");
+        }
+
+        function drawHumanSilhouette() {
+            ctx.strokeStyle = "#cbd5e1"; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+            const centerX = canvas.width / 2; const baseY = canvas.height * 0.12; const scale = Math.min(canvas.width, canvas.height) * 0.8;
+            ctx.beginPath(); ctx.ellipse(centerX, baseY + scale*0.1, scale*0.055, scale*0.075, 0, 0, Math.PI*2); ctx.stroke();
+            ctx.moveTo(centerX, baseY + scale*0.17); ctx.lineTo(centerX, baseY + scale*0.55); ctx.stroke();
+        }
+
+        // Navigation
+        document.getElementById('prevBtn').onclick = () => {
+            if (currentPage > 0) { savePageDrawing(); currentPage--; loadCurrentPage(); }
+        };
+
+        document.getElementById('nextBtn').onclick = () => {
+            if (currentPage < pagesData.length - 1) { savePageDrawing(); currentPage++; loadCurrentPage(); }
+        };
+
+        notesArea.oninput = () => { pagesData[currentPage].notes = notesArea.value; };
+
+        // PDF Generation
+        pdfBtn.onclick = async () => {
+            savePageDrawing();
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+
+            for (let i = 0; i < pagesData.length; i++) {
+                if (i > 0) doc.addPage();
+                
+                // Header
+                doc.setFillColor(240, 244, 248);
+                doc.rect(0, 0, pageWidth, 25, 'F');
+                doc.setTextColor(40, 40, 40);
+                doc.setFontSize(16);
+                doc.text("Yaraticilik Etkinlik Kitapçigi", 15, 15);
+                doc.setFontSize(10);
+                doc.text(`Ogrenci: ${studentName}`, 15, 20);
+                
+                // Instruction
+                doc.setTextColor(30, 60, 150);
+                doc.setFontSize(12);
+                const splitTitle = doc.splitTextToSize(`${i+1}. ${pagesData[i].instruction}`, pageWidth - 30);
+                doc.text(splitTitle, 15, 35);
+
+                // Image
+                if (pagesData[i].drawing) {
+                    doc.addImage(pagesData[i].drawing, 'PNG', 15, 50, pageWidth - 30, 100);
+                }
+
+                // Notes
+                doc.setDrawColor(200, 200, 200);
+                doc.rect(15, 160, pageWidth - 30, 50);
+                doc.setTextColor(80, 80, 80);
+                doc.setFontSize(10);
+                doc.text("Dusuncelerim:", 18, 167);
+                const splitNotes = doc.splitTextToSize(pagesData[i].notes || "Not yazilmadi.", pageWidth - 40);
+                doc.text(splitNotes, 18, 175);
+
+                // Footer
+                doc.setFontSize(8);
+                doc.text(`Sayfa ${i+1} / ${pagesData.length}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+            }
+
+            doc.save(`${studentName}_Yaraticilik_Calismalari.pdf`);
+        };
+
+    </script>
+</body>
+</html>

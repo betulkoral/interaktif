@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eğitici Eşit Kollu Terazi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --metal-gold: linear-gradient(145deg, #ffd700, #b8860b);
+            --metal-silver: linear-gradient(145deg, #e0e0e0, #9e9e9e);
+            --wood-grain: linear-gradient(to right, #5d4037, #8d6e63, #5d4037);
+        }
+
+        body {
+            background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #balance-beam {
+            transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: 400px 200px;
+        }
+
+        .pan-group {
+            transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+        }
+
+        .draggable {
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+
+        .draggable:hover {
+            transform: translateY(-5px);
+            filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1));
+        }
+
+        .pan-zone {
+            min-height: 120px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            align-content: flex-end;
+            padding-bottom: 15px;
+        }
+
+        .item-in-pan {
+            animation: dropIn 0.4s ease-out forwards;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        @keyframes dropIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .input-weight {
+            width: 90px;
+            background: transparent;
+            border-bottom: 2px solid #cbd5e1;
+            text-align: center;
+            font-family: monospace;
+            font-weight: bold;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-weight:focus {
+            border-bottom-color: #3b82f6;
+            color: #1d4ed8;
+        }
+
+        .correct-input {
+            border-bottom-color: #22c55e !important;
+            color: #15803d !important;
+            background: #f0fdf4;
+            border-radius: 4px;
+        }
+
+        .wrong-input {
+            border-bottom-color: #ef4444 !important;
+            color: #b91c1c !important;
+        }
+
+        .mode-active {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+            color: #1d4ed8 !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .read-only-input {
+            pointer-events: none;
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Başlık ve Mod Seçimi -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-3xl font-black text-slate-800 tracking-tight">⚖️ Akıllı Terazi Laboratuvarı</h1>
+                <p class="text-slate-500 font-medium italic">Modunu seç ve dengeyi keşfet!</p>
+            </div>
+            
+            <div class="flex bg-white p-1 rounded-2xl shadow-md border border-slate-200">
+                <button id="btn-explore" onclick="setMode('explore')" class="mode-active px-6 py-2 rounded-xl font-bold transition-all">🔍 Deneme Modu</button>
+                <button id="btn-quiz" onclick="setMode('quiz')" class="px-6 py-2 rounded-xl font-bold transition-all text-slate-400 hover:text-slate-600">📝 Hesaplama Modu</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <!-- Sol Panel: Durum Tahmini (Sadece Hesaplama Modunda Kritiktir) -->
+            <div id="quiz-sidebar" class="space-y-6">
+                <div class="bg-white p-6 rounded-[32px] shadow-xl border border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-amber-500 rounded-full"></span> Kontrol Paneli
+                    </h3>
+                    <div id="sidebar-content" class="space-y-4">
+                        <p id="mode-desc" class="text-sm text-slate-500 font-medium">Deneme Modunda terazi anlık çalışır.</p>
+                        
+                        <div id="quiz-only-fields" class="hidden space-y-4">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest">Denge Tahmini</label>
+                            <select id="input-status" class="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 focus:border-blue-500 outline-none transition-all font-bold text-slate-700">
+                                <option value="balanced">Tam Denge ✨</option>
+                                <option value="left-heavy">Sol Taraf Ağır 🔵</option>
+                                <option value="right-heavy">Sağ Taraf Ağır 🟠</option>
+                            </select>
+                            <button onclick="checkQuiz()" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-4 rounded-xl transition-all active:scale-95 shadow-lg">
+                                Sonucu Kontrol Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="result-box" class="hidden p-6 rounded-[32px] shadow-xl border-4 text-center animate-bounce">
+                    <div id="result-icon" class="text-4xl mb-2">?</div>
+                    <p id="result-text" class="font-bold text-slate-700"></p>
+                </div>
+            </div>
+
+            <!-- Orta Panel: Terazi -->
+            <div class="lg:col-span-3 flex flex-col items-center">
+                <div class="relative glass-panel rounded-[40px] p-8 w-full min-h-[500px] flex flex-col items-center justify-end overflow-hidden mb-8">
+                    
+                    <!-- Göstergeler -->
+                    <div class="absolute top-8 left-8 right-8 flex justify-between items-start pointer-events-none z-10">
+                        <!-- Sol Gösterge -->
+                        <div class="bg-white/90 border-l-4 border-blue-500 p-4 rounded-2xl shadow-lg pointer-events-auto">
+                            <p class="text-xs uppercase font-bold text-blue-500 tracking-wider">Sol Toplam</p>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="input-left-kefe" step="0.1" placeholder="?" 
+                                       class="input-weight text-3xl" oninput="validateLive('left')">
+                                <span class="text-sm font-bold text-slate-400">kg</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Merkez Durum Mesajı -->
+                        <div id="status-card" class="bg-white/90 px-8 py-4 rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center transition-all">
+                            <div id="status-icon" class="text-2xl mb-1">⚖️</div>
+                            <div id="status-msg" class="font-bold text-slate-400 uppercase tracking-widest text-sm text-center">Yüksüz</div>
+                        </div>
+
+                        <!-- Sağ Gösterge -->
+                        <div class="bg-white/90 border-r-4 border-amber-500 p-4 rounded-2xl shadow-lg text-right pointer-events-auto">
+                            <p class="text-xs uppercase font-bold text-amber-500 tracking-wider">Sağ Toplam</p>
+                            <div class="flex items-center gap-2 justify-end">
+                                <span class="text-sm font-bold text-slate-400">kg</span>
+                                <input type="number" id="input-right-kefe" step="0.1" placeholder="?" 
+                                       class="input-weight text-3xl" oninput="validateLive('right')">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SVG Terazi -->
+                    <svg viewBox="0 0 800 500" class="w-full h-auto max-w-[700px] drop-shadow-2xl">
+                        <defs>
+                            <linearGradient id="grad-gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffd700"/><stop offset="100%" stop-color="#b8860b"/></linearGradient>
+                            <linearGradient id="grad-silver" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#cbd5e1"/></linearGradient>
+                            <linearGradient id="grad-wood" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#451a03"/><stop offset="50%" stop-color="#78350f"/><stop offset="100%" stop-color="#451a03"/></linearGradient>
+                        </defs>
+
+                        <ellipse cx="400" cy="480" rx="180" ry="12" fill="rgba(0,0,0,0.05)" />
+                        <rect x="330" y="460" width="140" height="15" rx="3" fill="#451a03" />
+                        <rect x="394" y="200" width="12" height="260" fill="url(#grad-wood)" />
+                        <circle cx="400" cy="200" r="8" fill="#1c1917" />
+
+                        <g id="balance-beam">
+                            <rect x="100" y="193" width="600" height="14" rx="7" fill="url(#grad-gold)" />
+                            <path d="M399 190 L401 190 L400 120 Z" fill="#e11d48" id="needle" />
+
+                            <g id="left-pan-group" class="pan-group" style="transform-origin: 150px 200px;">
+                                <path d="M150 200 L115 320 M150 200 L185 320" stroke="#78350f" stroke-width="2" />
+                                <path d="M100 320 Q150 360 200 320 L205 315 Q150 355 95 315 Z" fill="url(#grad-silver)" stroke="#94a3b8" />
+                                <foreignObject x="90" y="220" width="120" height="120">
+                                    <div id="left-pan" class="pan-zone w-full h-full" ondrop="drop(event, 'left')" ondragover="allowDrop(event)"></div>
+                                </foreignObject>
+                            </g>
+
+                            <g id="right-pan-group" class="pan-group" style="transform-origin: 650px 200px;">
+                                <path d="M650 200 L615 320 M650 200 L685 320" stroke="#78350f" stroke-width="2" />
+                                <path d="M600 320 Q650 360 700 320 L705 315 Q650 355 595 315 Z" fill="url(#grad-silver)" stroke="#94a3b8" />
+                                <foreignObject x="590" y="220" width="120" height="120">
+                                    <div id="right-pan" class="pan-zone w-full h-full" ondrop="drop(event, 'right')" ondragover="allowDrop(event)"></div>
+                                </foreignObject>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- Nesneler -->
+                <div class="bg-white rounded-[32px] p-6 shadow-xl border border-slate-100 w-full">
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <div class="draggable bg-red-50 p-3 rounded-xl border-b-4 border-red-200 flex items-center gap-3" draggable="true" ondragstart="drag(event)" data-weight="1" data-emoji="🍎">
+                            <span class="text-3xl">🍎</span> <span class="font-bold text-red-700">1 kg</span>
+                        </div>
+                        <div class="draggable bg-green-50 p-3 rounded-xl border-b-4 border-green-200 flex items-center gap-3" draggable="true" ondragstart="drag(event)" data-weight="5" data-emoji="🍉">
+                            <span class="text-3xl">🍉</span> <span class="font-bold text-green-700">5 kg</span>
+                        </div>
+                        <div class="draggable bg-blue-50 p-3 rounded-xl border-b-4 border-blue-200 flex items-center gap-3" draggable="true" ondragstart="drag(event)" data-weight="2" data-emoji="🥛">
+                            <span class="text-3xl">🥛</span> <span class="font-bold text-blue-700">2 kg</span>
+                        </div>
+                        <div class="draggable bg-yellow-50 p-3 rounded-xl border-b-4 border-yellow-200 flex items-center gap-3" draggable="true" ondragstart="drag(event)" data-weight="0.5" data-emoji="🧀">
+                            <span class="text-3xl">🧀</span> <span class="font-bold text-yellow-700">0.5 kg</span>
+                        </div>
+                        <div class="draggable bg-slate-100 p-3 rounded-xl border-b-4 border-slate-300 flex items-center gap-3" draggable="true" ondragstart="drag(event)" data-weight="10" data-emoji="🔘">
+                            <span class="text-3xl">🔘</span> <span class="font-bold text-slate-700">10 kg</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-center">
+                        <button onclick="resetGame()" class="text-slate-400 hover:text-red-500 font-bold flex items-center gap-2 transition-colors">
+                            <span>🔄 Teraziyi Boşalt</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let leftWeight = 0, rightWeight = 0;
+        let currentMode = 'explore';
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnExp = document.getElementById('btn-explore');
+            const btnQuiz = document.getElementById('btn-quiz');
+            const modeDesc = document.getElementById('mode-desc');
+            const quizFields = document.getElementById('quiz-only-fields');
+            const leftInput = document.getElementById('input-left-kefe');
+            const rightInput = document.getElementById('input-right-kefe');
+            const statusCard = document.getElementById('status-card');
+            
+            resetGame();
+
+            if(mode === 'quiz') {
+                btnQuiz.className = "mode-active px-6 py-2 rounded-xl font-bold transition-all shadow-inner";
+                btnExp.className = "px-6 py-2 rounded-xl font-bold transition-all text-slate-400 hover:text-slate-600";
+                modeDesc.innerText = "Hesaplama Modu: Nesneleri koy, toplamları yaz ve denge yönünü tahmin et!";
+                quizFields.classList.remove('hidden');
+                
+                // Inputları aç
+                leftInput.classList.remove('read-only-input');
+                rightInput.classList.remove('read-only-input');
+                leftInput.placeholder = "?";
+                rightInput.placeholder = "?";
+                
+                // Durum kartını gizle (kontrol etmeden görünmesin)
+                statusCard.classList.add('opacity-0');
+            } else {
+                btnExp.className = "mode-active px-6 py-2 rounded-xl font-bold transition-all shadow-inner";
+                btnQuiz.className = "px-6 py-2 rounded-xl font-bold transition-all text-slate-400 hover:text-slate-600";
+                modeDesc.innerText = "Deneme Modu: Nesneleri yerleştirince terazi anında hareket eder.";
+                quizFields.classList.add('hidden');
+                
+                // Inputları sadece okunur yap
+                leftInput.classList.add('read-only-input');
+                rightInput.classList.add('read-only-input');
+                
+                statusCard.classList.remove('opacity-0');
+                updateBalanceUI();
+            }
+        }
+
+        function validateLive(side) {
+            if (currentMode === 'explore') return; // Deneme modunda live validation yok, otomatik yazıyor zaten
+            
+            const input = document.getElementById(`input-${side}-kefe`);
+            const realVal = side === 'left' ? leftWeight : rightWeight;
+            const userVal = parseFloat(input.value);
+
+            if (userVal === Math.round(realVal * 10) / 10) {
+                input.classList.add('correct-input');
+                input.classList.remove('wrong-input');
+            } else if (!isNaN(userVal)) {
+                input.classList.add('wrong-input');
+                input.classList.remove('correct-input');
+            } else {
+                input.classList.remove('correct-input', 'wrong-input');
+            }
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", JSON.stringify({
+                weight: ev.currentTarget.dataset.weight,
+                emoji: ev.currentTarget.dataset.emoji
+            }));
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function drop(ev, side) {
+            ev.preventDefault();
+            const data = JSON.parse(ev.dataTransfer.getData("text"));
+            const weight = parseFloat(data.weight);
+            const zone = document.getElementById(side + '-pan');
+            
+            const item = document.createElement("div");
+            item.className = "item-in-pan text-3xl";
+            item.innerHTML = data.emoji;
+            item.onclick = () => {
+                item.remove();
+                if(side === 'left') leftWeight -= weight; else rightWeight -= weight;
+                syncWeights();
+            };
+            
+            zone.appendChild(item);
+            if(side === 'left') leftWeight += weight; else rightWeight += weight;
+            
+            syncWeights();
+        }
+
+        function syncWeights() {
+            if (currentMode === 'explore') {
+                // Deneme Modu: Otomatik yaz ve hareket et
+                document.getElementById('input-left-kefe').value = Math.round(leftWeight * 10) / 10;
+                document.getElementById('input-right-kefe').value = Math.round(rightWeight * 10) / 10;
+                updateBalanceUI();
+            } else {
+                // Hesaplama Modu: Yazma, sadece validation durumunu güncelle
+                validateLive('left');
+                validateLive('right');
+                applyTilt(0); // Terazi sabit kalsın
+            }
+        }
+
+        function checkQuiz() {
+            const realLeft = Math.round(leftWeight * 10) / 10;
+            const realRight = Math.round(rightWeight * 10) / 10;
+            const userLeft = parseFloat(document.getElementById('input-left-kefe').value);
+            const userRight = parseFloat(document.getElementById('input-right-kefe').value);
+            const userStatus = document.getElementById('input-status').value;
+
+            let realStatus = 'balanced';
+            if(realLeft > realRight) realStatus = 'left-heavy';
+            if(realRight > realLeft) realStatus = 'right-heavy';
+
+            const resBox = document.getElementById('result-box');
+            const resText = document.getElementById('result-text');
+            const resIcon = document.getElementById('result-icon');
+            const statusCard = document.getElementById('status-card');
+
+            resBox.classList.remove('hidden');
+            
+            const isCalculationsCorrect = (userLeft === realLeft && userRight === realRight);
+            const isStatusCorrect = (userStatus === realStatus);
+
+            if(isCalculationsCorrect && isStatusCorrect) {
+                resBox.className = "bg-green-50 p-6 rounded-[32px] shadow-xl border-4 border-green-500 text-center block animate-bounce";
+                resIcon.innerText = "🌟";
+                resText.innerText = "Mükemmel! Terazi hareket ediyor...";
+                statusCard.classList.remove('opacity-0');
+                updateBalanceUI(); 
+            } else {
+                resBox.className = "bg-red-50 p-6 rounded-[32px] shadow-xl border-4 border-red-500 text-center block";
+                resIcon.innerText = "🤔";
+                let msg = "";
+                if(!isCalculationsCorrect) msg += "Kütle toplamları hatalı. ";
+                if(!isStatusCorrect) msg += "Tahmin ettiğin yönde bir hata var.";
+                resText.innerText = msg || "Değerleri kontrol et!";
+            }
+        }
+
+        function updateBalanceUI() {
+            const statusMsg = document.getElementById('status-msg');
+            const statusIcon = document.getElementById('status-icon');
+            const statusCard = document.getElementById('status-card');
+
+            const diff = rightWeight - leftWeight;
+            const angle = Math.max(-20, Math.min(20, diff * 3));
+            applyTilt(angle);
+
+            if (Math.abs(diff) < 0.1 && (leftWeight > 0)) {
+                statusMsg.innerText = "Dengede";
+                statusIcon.innerText = "✨";
+                statusCard.style.borderColor = "#22c55e";
+            } else if (leftWeight + rightWeight === 0) {
+                statusMsg.innerText = "Yüksüz";
+                statusIcon.innerText = "⚖️";
+                statusCard.style.borderColor = "#e2e8f0";
+            } else {
+                statusMsg.innerText = diff < 0 ? "Sol Ağır" : "Sağ Ağır";
+                statusIcon.innerText = diff < 0 ? "🔵" : "🟠";
+                statusCard.style.borderColor = diff < 0 ? "#3b82f6" : "#f59e0b";
+            }
+        }
+
+        function applyTilt(angle) {
+            document.getElementById('balance-beam').style.transform = `rotate(${angle}deg)`;
+            document.getElementById('left-pan-group').style.transform = `rotate(${-angle}deg)`;
+            document.getElementById('right-pan-group').style.transform = `rotate(${-angle}deg)`;
+        }
+
+        function resetGame() {
+            leftWeight = 0; rightWeight = 0;
+            document.getElementById('left-pan').innerHTML = '';
+            document.getElementById('right-pan').innerHTML = '';
+            const inputs = document.querySelectorAll('.input-weight');
+            inputs.forEach(i => {
+                i.value = '';
+                i.classList.remove('correct-input', 'wrong-input');
+            });
+            document.getElementById('result-box').classList.add('hidden');
+            applyTilt(0);
+            if(currentMode === 'explore') updateBalanceUI();
+        }
+    </script>
+</body>
+</html>

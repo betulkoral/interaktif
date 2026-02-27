@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Küresel Amaçlar İnteraktif Sorgulama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .goal-card { transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; }
+        .goal-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .level-card { display: none; }
+        .level-card.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .bg-goal-1 { background-color: #E5243B; } .bg-goal-2 { background-color: #DDA63A; }
+        .bg-goal-3 { background-color: #4C9F38; } .bg-goal-4 { background-color: #C5192D; }
+        .bg-goal-5 { background-color: #FF3A21; } .bg-goal-6 { background-color: #26BDE2; }
+        .bg-goal-7 { background-color: #FCC30B; } .bg-goal-8 { background-color: #A21942; }
+        .bg-goal-9 { background-color: #FD6925; } .bg-goal-10 { background-color: #DD1367; }
+        .bg-goal-11 { background-color: #FD9D24; } .bg-goal-12 { background-color: #BF8B2E; }
+        .bg-goal-13 { background-color: #3F7E44; } .bg-goal-14 { background-color: #0A97D9; }
+        .bg-goal-15 { background-color: #56C02B; } .bg-goal-16 { background-color: #00689D; }
+        .bg-goal-17 { background-color: #19486A; }
+        body { background-color: #f0f9ff; }
+    </style>
+</head>
+<body class="font-sans text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-orange-500 flex items-center gap-2">
+                <i class="fa-solid fa-earth-americas text-blue-400"></i> Dünyayı Güzelleştirelim!
+            </h1>
+            <nav class="hidden md:flex space-x-6 text-sm font-bold">
+                <a href="#amaclar" class="text-slate-500 hover:text-orange-500">Görevler</a>
+                <a href="#seviyeler" class="text-slate-500 hover:text-orange-500">İyilik Alanları</a>
+                <a href="#meydan-okuma" class="bg-orange-500 text-white px-5 py-2 rounded-full hover:bg-orange-600 shadow-md transition">Meydan Okuma Başlat</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="max-w-6xl mx-auto px-4 py-16 text-center">
+        <div class="inline-block bg-yellow-100 text-yellow-700 px-4 py-1 rounded-full text-sm font-bold mb-6 uppercase tracking-wider">🌟 Sen Bir İyilik Kahramanısın!</div>
+        <h2 class="text-3xl md:text-5xl font-extrabold mb-6 leading-tight text-slate-900">
+            Sürdürülebilir Bir Dünya Kurmak İster Misin?
+        </h2>
+        <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Arkadaşlarınla el ele verip herkese yardım edebilir, doğayı koruyabilir ve hayvanları sevebilirsin. Her gün yapacağın minicik bir iyilik, dünyamız için kocaman bir gülümsemeye dönüşür!
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="#seviyeler" class="px-8 py-4 bg-orange-500 text-white rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-orange-600 transform hover:scale-105 transition">İyilik Yolculuğuna Başla</a>
+            <a href="#amaclar" class="px-8 py-4 bg-white border-2 border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition">17 İyilik Görevi</a>
+        </div>
+    </section>
+
+    <!-- Amaçlar Izgarası -->
+    <section id="amaclar" class="max-w-6xl mx-auto px-4 py-16">
+        <div class="text-center mb-10">
+            <h3 class="text-2xl font-bold text-slate-800 uppercase tracking-widest">17 İyilik Görevi</h3>
+            <p class="text-slate-500 mt-2">Kartlara dokun ve görevleri öğren!</p>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="goalsGrid">
+            <!-- JS will populate goals here -->
+        </div>
+        <div id="goalDetail" class="mt-8 p-8 bg-white rounded-3xl shadow-xl hidden border-t-8 border-orange-500">
+            <h4 id="detailTitle" class="text-2xl font-bold mb-2"></h4>
+            <p id="detailText" class="text-lg text-slate-600 italic"></p>
+        </div>
+    </section>
+
+    <!-- Seviyeler Bölümü -->
+    <section id="seviyeler" class="bg-blue-600 py-20 text-white rounded-[3rem] mx-4 my-10 shadow-2xl">
+        <div class="max-w-4xl mx-auto px-4">
+            <h3 class="text-3xl font-bold mb-4 text-center">Küçük Adımlarla Büyük Değişim</h3>
+            <p class="text-center text-blue-100 mb-12">Nerede iyilik yapmak istersin? Bir alan seç!</p>
+            
+            <div class="flex flex-wrap justify-center gap-3 mb-12">
+                <button onclick="showLevel(1)" class="lvl-btn px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 font-bold transition" id="btn1">🏠 Evde İyilik</button>
+                <button onclick="showLevel(2)" class="lvl-btn px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 font-bold transition" id="btn2">🚿 Su ve Enerji</button>
+                <button onclick="showLevel(3)" class="lvl-btn px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 font-bold transition" id="btn3">🌳 Bahçede/Sokakta</button>
+                <button onclick="showLevel(4)" class="lvl-btn px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 font-bold transition" id="btn4">🎒 Okulda El Ele</button>
+            </div>
+
+            <!-- Level 1 -->
+            <div id="level1" class="level-card active bg-white text-slate-800 p-8 rounded-3xl shadow-2xl relative">
+                <h4 class="text-2xl font-bold mb-6 text-orange-500">Evimizde Yapabileceğimiz İyilikler</h4>
+                <ul class="space-y-4 text-lg">
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-lightbulb text-yellow-400 text-2xl"></i> Odanın ışığını çıkarken kapatarak gereksiz enerji tüketimini azaltalım.</li>
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-tablet-screen-button text-blue-400 text-2xl"></i> Kullanılmadığı zamanlarda elektronik aletlerin fişini çekelim.</li>
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-heart text-red-400 text-2xl"></i> İletişim kurarken nazik olalım.</li>
+                </ul>
+            </div>
+
+            <!-- Level 2 -->
+            <div id="level2" class="level-card bg-white text-slate-800 p-8 rounded-3xl shadow-2xl">
+                <h4 class="text-2xl font-bold mb-6 text-orange-500">Suyumuzu ve Doğamızı Koruyalım</h4>
+                <ul class="space-y-4 text-lg">
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-droplet text-blue-500 text-2xl"></i> Diş fırçalarken musluğu kapatıp gereksiz su tüketimini engelleyelim.</li>
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-recycle text-green-500 text-2xl"></i> Kağıt, plastik ve cam atıkları ayrıştırarak geri dönüşüme atalım.</li>
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-apple-whole text-red-500 text-2xl"></i> Tabağına bitirebileceğimiz kadar yiyecek alıp israfı önleyelim.</li>
+                </ul>
+            </div>
+
+            <!-- Level 3 -->
+            <div id="level3" class="level-card bg-white text-slate-800 p-8 rounded-3xl shadow-2xl">
+                <h4 class="text-2xl font-bold mb-6 text-orange-500">Dışarıda Bir Doğa Dostu Ol</h4>
+                <ul class="space-y-4 text-lg">
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-bag-shopping text-orange-400 text-2xl"></i> Alışverişte plastik poşet yerine bez çanta kullanalım.</li>
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-shoe-prints text-slate-400 text-2xl"></i> Yakın yerlere yürüyerek gidip araç kullanımını azaltalım.</li>
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-tree text-green-600 text-2xl"></i> Ağaçlara ve çiçeklere zarar vermeden onları sevelim.</li>
+                </ul>
+            </div>
+
+            <!-- Level 4 -->
+            <div id="level4" class="level-card bg-white text-slate-800 p-8 rounded-3xl shadow-2xl">
+                <h4 class="text-2xl font-bold mb-6 text-orange-500">Okulumuzda Paylaşalım</h4>
+                <ul class="space-y-4 text-lg">
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-hand-holding-heart text-pink-400 text-2xl"></i> Arkadaşlarımıza karşı paylaşımcı olup mutluluğu çoğaltalım.</li>
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-users text-indigo-400 text-2xl"></i> Farklılıklara açık olup kimseyi oyun dışında bırakmayalım.</li>
+                    <li class="flex items-start gap-4"><i class="fa-solid fa-book-open text-blue-600 text-2xl"></i> Yeni şeyler öğrenip bilgimizi iyilik için kullanalım.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Meydan Okuma Formu -->
+    <section id="meydan-okuma" class="max-w-4xl mx-auto px-4 py-20">
+        <div class="text-center mb-12">
+            <h3 class="text-3xl font-bold mb-4">Günün İyilik Planı</h3>
+            <p class="text-slate-500">Bugün dünya için ne yapacaksın? Buraya yaz!</p>
+        </div>
+
+        <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border-4 border-dashed border-orange-100">
+            <div class="grid gap-8">
+                <div>
+                    <label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-widest">Sabah Görevim</label>
+                    <input type="text" placeholder="Örn: Yatağımı toplayıp anneme yardım edeceğim" class="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-orange-400 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-widest">Okul Görevim</label>
+                    <input type="text" placeholder="Örn: Çöplerimi kutuya atacağım" class="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-orange-400 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-widest">Akşam Görevim</label>
+                    <input type="text" placeholder="Örn: Hikaye kitabımı arkadaşıma ödünç vereceğim" class="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-orange-400 outline-none transition">
+                </div>
+                <button onclick="saveChallenge()" class="mt-4 w-full py-5 bg-orange-500 text-white rounded-2xl font-black text-xl hover:shadow-2xl hover:bg-orange-600 transform hover:-translate-y-1 transition flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-star"></i> İYİLİK PLANIMI BAŞLAT
+                </button>
+            </div>
+            <div id="successMsg" class="hidden mt-8 p-6 bg-green-50 text-green-600 rounded-2xl text-center font-bold border-2 border-green-100 animate-bounce">
+                🌟 Harikasın! Sen gerçek bir İyilik Kahramanısın! 🌍
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-50 py-16 text-center text-slate-400">
+        <div class="flex justify-center gap-4 mb-6 text-2xl">
+            <i class="fa-solid fa-sun text-yellow-400"></i>
+            <i class="fa-solid fa-cloud text-blue-200"></i>
+            <i class="fa-solid fa-seedling text-green-400"></i>
+        </div>
+        <p class="font-bold">Küçük eller, büyük işler başarır.</p>
+        <p class="mt-2 text-xs">Bu dünya hepimizin evi.</p>
+    </footer>
+
+    <script>
+        const goals = [
+            { id: 1, name: "Yoksulluğa Son", desc: "İhtiyacı olanlarla paylaşalım, kimse açıkta kalmasın." },
+            { id: 2, name: "Açlığa Son", desc: "Yemeğimizi israf etmeyelim, sağlıklı beslenelim." },
+            { id: 3, name: "Sağlıklı Yaşam", desc: "Hareket edelim, temiz havada oyun oynayalım." },
+            { id: 4, name: "Nitelikli Eğitim", desc: "Okuyalım, öğrenelim ve birbirimize öğretelim." },
+            { id: 5, name: "Cinsiyet Eşitliği", desc: "Kızlar ve erkekler her oyunu beraber oynayabilir." },
+            { id: 6, name: "Temiz Su", desc: "Suyumuzu boşuna akıtmayalım, onu koruyalım." },
+            { id: 7, name: "Temiz Enerji", desc: "Işıkları gereksizse söndürelim, güneşten güç alalım." },
+            { id: 8, name: "İyi İş Şartları", desc: "Herkes işinde güvende ve adil ortamda çalışsın." },
+            { id: 9, name: "Yeni Fikirler", desc: "Daha ileri yollar bulalım, dünyayı geliştirelim." },
+            { id: 10, name: "Eşitlik", desc: "Farklılıklarımızı sevelim, onlara saygı duyalım." },
+            { id: 11, name: "Güzel Şehirler", desc: "Parklarımızı temiz tutalım, şehirlerimizi geliştirelim." },
+            { id: 12, name: "Tutumlu Olmak", desc: "Sadece ihtiyacımız kadar alalım, israf etmeyelim." },
+            { id: 13, name: "Dünyayı Serin Tut", desc: "Ağaç dikelim, doğayı kucaklayalım." },
+            { id: 14, name: "Mavi Denizler", desc: "Denizleri temiz tutalım, canlıları koruyalım." },
+            { id: 15, name: "Yeşil Ormanlar", desc: "Ormanları sevelim, yaşam alanlarını koruyalım." },
+            { id: 16, name: "Barış ve Dostluk", desc: "Kavga etmeyelim, çözüm yolları bulalım." },
+            { id: 17, name: "El Ele Verelim", desc: "Tüm bu görevler için hep beraber çalışalım." }
+        ];
+
+        const grid = document.getElementById('goalsGrid');
+        goals.forEach(goal => {
+            const div = document.createElement('div');
+            div.className = `goal-card bg-goal-${goal.id} aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-white text-center shadow-lg`;
+            div.innerHTML = `
+                <span class="text-3xl font-black opacity-40 absolute">${goal.id}</span>
+                <span class="text-[11px] font-black uppercase leading-tight relative z-10 drop-shadow-md">${goal.name}</span>
+            `;
+            div.onclick = () => showDetail(goal);
+            grid.appendChild(div);
+        });
+
+        function showDetail(goal) {
+            const detail = document.getElementById('goalDetail');
+            const title = document.getElementById('detailTitle');
+            const text = document.getElementById('detailText');
+            
+            detail.style.borderColor = getComputedStyle(document.querySelector(`.bg-goal-${goal.id}`)).backgroundColor;
+            title.innerText = `${goal.id}. ${goal.name}`;
+            title.style.color = detail.style.borderColor;
+            text.innerText = goal.desc;
+            detail.classList.remove('hidden');
+            detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function showLevel(n) {
+            document.querySelectorAll('.level-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(`level${n}`).classList.add('active');
+            
+            document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('bg-white', 'text-blue-600', 'shadow-xl'));
+            document.getElementById(`btn${n}`).classList.add('bg-white', 'text-blue-600', 'shadow-xl');
+        }
+
+        function saveChallenge() {
+            const msg = document.getElementById('successMsg');
+            msg.classList.remove('hidden');
+            msg.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        showLevel(1);
+    </script>
+</body>
+</html>

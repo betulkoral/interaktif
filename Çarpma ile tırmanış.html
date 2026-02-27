@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kale Tırmanışı: Matematik Şövalyesi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Fredoka:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #87CEEB;
+            overflow: hidden;
+            margin: 0;
+            user-select: none;
+        }
+
+        /* Gökyüzü ve Arka Plan */
+        .castle-container {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.8;
+            animation: float 20s linear infinite;
+        }
+        .cloud::after, .cloud::before {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+        .cloud-1 { width: 120px; height: 40px; top: 15%; left: -150px; }
+        .cloud-2 { width: 180px; height: 60px; top: 35%; left: -250px; animation-delay: 5s; }
+
+        @keyframes float {
+            from { left: -200px; }
+            to { left: 110%; }
+        }
+
+        .sun {
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            width: 100px;
+            height: 100px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 50px #FFA500;
+            z-index: 1;
+        }
+
+        /* Kale Tasarımı */
+        .castle-tower {
+            width: 240px;
+            height: 100%;
+            background: #d4a373;
+            border-left: 15px solid #bc8a5f;
+            border-right: 15px solid #bc8a5f;
+            position: relative;
+            background-image: 
+                linear-gradient(90deg, transparent 95%, rgba(0,0,0,0.05) 95%),
+                linear-gradient(rgba(0,0,0,0.05) 5%, transparent 5%);
+            background-size: 60px 60px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.1);
+            z-index: 2;
+        }
+
+        /* Pencere ve Sabit Karakter */
+        .window {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 120px;
+            background: #2d3748;
+            border: 8px solid #fefae0;
+            border-top-left-radius: 45px;
+            border-top-right-radius: 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 4;
+            overflow: hidden;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .cute-char {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: bounce 2s infinite ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .char-crown { font-size: 20px; margin-bottom: -12px; z-index: 10; }
+        .char-head {
+            width: 50px;
+            height: 50px;
+            background: #ffe0bd;
+            border-radius: 50%;
+            position: relative;
+            border: 3px solid #744210;
+            z-index: 5;
+            overflow: hidden;
+        }
+
+        /* PEMBE KARAKTER GÖZ GÜNCELLEMESİ */
+        .char-eye { 
+            position: absolute; 
+            top: 18px; 
+            width: 12px; 
+            height: 12px; 
+            background: #1a202c; 
+            border-radius: 50%; 
+        }
+        /* Göz parıltısı efekti */
+        .char-eye::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+        }
+        .eye-l { left: 8px; }
+        .eye-r { right: 8px; }
+
+        .char-mouth-happy { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 18px; height: 10px; border-bottom: 3px solid #744210; border-radius: 50%; }
+
+        /* Zırhlı Şövalye Tasarımı */
+        .knight {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 64px;
+            height: 100px;
+            transition: bottom 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .knight-helmet {
+            width: 54px;
+            height: 54px;
+            background: #4a5568; 
+            border: 3px solid #1a202c;
+            border-radius: 25px 25px 10px 10px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            animation: climb-sway 2.5s infinite ease-in-out;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .knight-face-opening {
+            width: 38px;
+            height: 38px;
+            background: #ffe0bd;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #2d3748;
+        }
+
+        /* ŞÖVALYE GÖZLERİ */
+        .k-eye { 
+            width: 10px; 
+            height: 10px; 
+            background: #1a202c; 
+            border-radius: 50%; 
+            position: absolute; 
+            top: 10px; 
+            overflow: hidden;
+        }
+        .k-eye::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+        }
+        .k-eye-l { left: 7px; }
+        .k-eye-r { right: 7px; }
+        
+        .k-smile { 
+            width: 14px; 
+            height: 7px; 
+            border-bottom: 3px solid #2d3748; 
+            border-radius: 0 0 10px 10px; 
+            position: absolute; 
+            bottom: 6px; 
+        }
+
+        .helmet-top {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 15px;
+            background: #2d3748;
+            border-bottom: 2px solid #1a202c;
+        }
+
+        .knight-armor-main {
+            width: 50px;
+            height: 45px;
+            background: #4a5568;
+            border: 3px solid #1a202c;
+            border-radius: 12px;
+            margin-top: -6px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .armor-plate {
+            position: absolute;
+            width: 80%;
+            height: 6px;
+            background: #718096;
+            border-radius: 10px;
+            top: 10px;
+            box-shadow: 0 2px 0 #1a202c;
+        }
+        .armor-plate-2 { top: 20px; width: 70%; }
+
+        .pauldron {
+            position: absolute;
+            width: 20px;
+            height: 15px;
+            background: #2d3748;
+            border: 2px solid #1a202c;
+            border-radius: 50% 50% 0 0;
+            top: -5px;
+        }
+        .pauldron-l { left: -8px; transform: rotate(-15deg); }
+        .pauldron-r { right: -8px; transform: rotate(15deg); }
+
+        .knight-cape {
+            position: absolute;
+            top: 5px;
+            left: -8px;
+            right: -8px;
+            height: 65px;
+            background: #801a1a;
+            z-index: -1;
+            border-radius: 6px;
+            opacity: 0.95;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        @keyframes climb-sway {
+            0%, 100% { transform: rotate(-3deg) translateX(-2px); }
+            50% { transform: rotate(3deg) translateX(2px); }
+        }
+
+        .rope {
+            position: absolute;
+            left: 50%;
+            top: 15%;
+            bottom: 0;
+            width: 10px;
+            background: repeating-linear-gradient(0deg, #8d6e63, #8d6e63 20px, #5d4037 20px, #5d4037 40px);
+            transform: translateX(-50%);
+            z-index: 1;
+            box-shadow: 3px 0 6px rgba(0,0,0,0.2);
+        }
+
+        .moat {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 130px;
+            background: #0077be;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            border-top: 8px solid #00a8e8;
+        }
+
+        .crocodile { font-size: 55px; animation: crocSnap 3s infinite ease-in-out; }
+        @keyframes crocSnap { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(5deg); } }
+
+        /* UI Paneli */
+        .ui-panel {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            width: 360px;
+            z-index: 100;
+            border: 6px solid #faedcd;
+        }
+
+        .success-flash { animation: flashGreen 0.6s ease-out; }
+        .error-flash { animation: flashRed 0.6s ease-out; }
+        @keyframes flashGreen { 50% { background-color: #f0fff4; transform: scale(1.03); } }
+        @keyframes flashRed { 50% { background-color: #fff5f5; transform: scale(0.97); } }
+    </style>
+</head>
+<body>
+
+<div class="castle-container">
+    <div class="sun"></div>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+
+    <div class="castle-tower">
+        <div class="window">
+            <div class="cute-char">
+                <div class="char-crown">👑</div>
+                <div class="char-head">
+                    <div class="char-eye eye-l"></div>
+                    <div class="char-eye eye-r"></div>
+                    <div class="char-mouth-happy"></div>
+                </div>
+                <div class="w-12 h-14 bg-pink-400 rounded-t-2xl border-x-4 border-pink-600 relative z-10"></div>
+            </div>
+        </div>
+
+        <div class="rope"></div>
+        
+        <div id="knight" class="knight" style="bottom: 130px;">
+            <div class="knight-helmet">
+                <div class="helmet-top"></div>
+                <div class="knight-face-opening">
+                    <div class="k-eye k-eye-l"></div>
+                    <div class="k-eye k-eye-r"></div>
+                    <div class="k-smile"></div>
+                </div>
+            </div>
+            <div class="knight-armor-main">
+                <div class="pauldron pauldron-l"></div>
+                <div class="pauldron pauldron-r"></div>
+                <div class="armor-plate"></div>
+                <div class="armor-plate armor-plate-2"></div>
+                <div class="knight-cape"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="moat">
+        <span class="crocodile">🐊</span>
+        <span class="crocodile">🐊</span>
+        <span class="crocodile">🐊</span>
+    </div>
+
+    <div id="gamePanel" class="ui-panel">
+        <h2 class="text-3xl font-black text-center mb-6 text-slate-800 uppercase tracking-tighter" style="font-family: 'Cinzel', serif;">Zırhlı Tırmanış</h2>
+        <div id="questionDisplay" class="text-5xl font-bold text-center text-indigo-900 mb-8 bg-slate-50 py-8 rounded-3xl border-b-8 border-slate-200">-- × --</div>
+        <div class="space-y-4">
+            <input type="number" id="answerInput" class="w-full text-center text-4xl p-5 border-4 border-slate-100 rounded-2xl focus:outline-none focus:border-indigo-400 transition-all shadow-inner" placeholder="Cevap?" autofocus>
+            <button id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-2xl py-5 rounded-2xl shadow-xl transform active:scale-95 transition-all">GÜÇLÜ TIRMAN!</button>
+        </div>
+        <div class="mt-8 flex justify-between items-center font-black text-slate-500 uppercase text-sm">
+            <div class="bg-indigo-50 px-5 py-3 rounded-2xl border-2 border-indigo-100">PUAN: <span id="scoreDisplay" class="text-indigo-600 text-xl">0</span></div>
+            <div class="bg-slate-50 px-5 py-3 rounded-2xl border-2 border-slate-100">ADIM: <span id="distanceDisplay" class="text-slate-800 text-xl">10</span></div>
+        </div>
+    </div>
+
+    <div id="messageBox" class="fixed inset-0 flex items-center justify-center bg-indigo-900 bg-opacity-40 backdrop-blur-sm z-[200] hidden">
+        <div class="bg-white p-12 rounded-[3.5rem] text-center max-w-sm border-[14px] border-yellow-400 shadow-2xl scale-in">
+            <div class="text-8xl mb-6">🛡️</div>
+            <h2 class="text-4xl font-black mb-4 text-slate-800">ZAFER!</h2>
+            <p id="messageText" class="text-xl text-slate-600 mb-10 leading-relaxed"></p>
+            <button onclick="resetGame()" class="bg-indigo-600 hover:bg-indigo-800 text-white w-full py-6 rounded-2xl font-black text-2xl shadow-xl transition-all">TEKRAR BAŞLA</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStep = 0;
+    const totalSteps = 10;
+    let correctAnswer = 0;
+    let score = 0;
+
+    const knight = document.getElementById('knight');
+    const questionDisplay = document.getElementById('questionDisplay');
+    const answerInput = document.getElementById('answerInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const distanceDisplay = document.getElementById('distanceDisplay');
+    const gamePanel = document.getElementById('gamePanel');
+    const messageBox = document.getElementById('messageBox');
+
+    function generateQuestion() {
+        const n1 = Math.floor(Math.random() * 90) + 10; 
+        const n2 = Math.floor(Math.random() * 8) + 2;  
+        correctAnswer = n1 * n2;
+        questionDisplay.innerText = `${n1} × ${n2}`;
+        answerInput.value = '';
+        answerInput.focus();
+    }
+
+    function updateKnightPosition() {
+        const minBottom = 130;
+        const maxBottom = window.innerHeight * 0.72;
+        const stepSize = (maxBottom - minBottom) / totalSteps;
+        const newBottom = minBottom + (currentStep * stepSize);
+        knight.style.bottom = `${newBottom}px`;
+        distanceDisplay.innerText = Math.max(0, totalSteps - currentStep);
+        if (currentStep >= totalSteps) {
+            setTimeout(() => showEndGame(), 800);
+        }
+    }
+
+    function checkAnswer() {
+        const val = answerInput.value.trim();
+        if (val === "") return;
+        const userAnswer = parseInt(val);
+        if (userAnswer === correctAnswer) {
+            currentStep++;
+            score += 10;
+            flashUI('success');
+        } else {
+            currentStep = Math.max(0, currentStep - 1);
+            flashUI('error');
+        }
+        scoreDisplay.innerText = score;
+        updateKnightPosition();
+        if (currentStep < totalSteps) generateQuestion();
+    }
+
+    function flashUI(type) {
+        const className = type === 'success' ? 'success-flash' : 'error-flash';
+        gamePanel.classList.add(className);
+        setTimeout(() => gamePanel.classList.remove(className), 600);
+    }
+
+    function showEndGame() {
+        messageBox.classList.remove('hidden');
+        document.getElementById('messageText').innerText = `Zırhlı şövalye kuleye ulaştı! \nToplam Skorun: ${score}`;
+    }
+
+    function resetGame() {
+        currentStep = 0;
+        score = 0;
+        scoreDisplay.innerText = '0';
+        messageBox.classList.add('hidden');
+        updateKnightPosition();
+        generateQuestion();
+    }
+
+    submitBtn.addEventListener('click', checkAnswer);
+    answerInput.addEventListener('keypress', (e) => e.key === 'Enter' && checkAnswer());
+
+    window.onload = () => {
+        generateQuestion();
+        updateKnightPosition();
+    };
+</script>
+
+</body>
+</html>

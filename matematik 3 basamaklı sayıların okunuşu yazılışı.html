@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayı Macerası - Okuma Yazma Oyunu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #F0F9FF;
+            overflow: hidden;
+        }
+        .game-font {
+            font-family: 'Fredoka One', cursive;
+        }
+        .correct-animation {
+            animation: correct 0.6s ease-in-out;
+        }
+        @keyframes correct {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); background-color: #4ade80; box-shadow: 0 0 20px #4ade80; }
+            100% { transform: scale(1); }
+        }
+        .incorrect-animation {
+            animation: incorrect 0.5s ease-in-out;
+        }
+        @keyframes incorrect {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-15px); }
+            40% { transform: translateX(15px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+        }
+        .level-up-animation {
+            animation: level-up 1.5s ease-in-out;
+        }
+        @keyframes level-up {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 1; color: #f97316; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .swoop-in {
+            animation: swoop-in 0.7s ease-out forwards;
+        }
+        @keyframes swoop-in {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Başlangıç Ekranı -->
+    <div id="start-screen" class="w-full max-w-lg mx-auto bg-white rounded-3xl shadow-2xl p-6 sm:p-8 text-center border-4 border-blue-300 flex flex-col items-center swoop-in">
+        <!-- Sevimli Bulut Simgesi -->
+        <svg class="w-24 h-24 text-sky-400 mb-4" viewBox="0 0 200 120" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M151.7,53.2c-2.3-22.6-21.7-40.4-45.6-40.4c-15.6,0-29.3,7.3-37.9,18.5c-3.7-2.3-8-3.7-12.6-3.7C34.5,27.5,16,46,16,67.1c0,2.1,0.2,4.2,0.5,6.2C6.9,78.2,0,89.9,0,103.2C0,112.5,7.2,120,16,120h168c8.8,0,16-7.5,16-16.8C200,86.1,179.4,62.1,151.7,53.2z"/>
+          <circle cx="70" cy="75" r="8" fill="white"/>
+          <circle cx="110" cy="75" r="8" fill="white"/>
+          <path d="M80 90 Q90 105 100 90" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/>
+        </svg>
+
+        <h1 class="text-3xl sm:text-4xl game-font text-blue-600 mb-2">Sayı Macerası'na Hoş Geldin!</h1>
+        <p class="text-gray-500 mb-6">Maceraya başlamadan önce adın ne?</p>
+        <input type="text" id="name-input" placeholder="Adını buraya yaz..." class="w-full text-center p-3 border-2 border-gray-300 rounded-lg text-xl focus:border-blue-500 focus:ring-blue-500 game-font mb-4">
+        <button id="start-button" class="w-full bg-green-500 hover:bg-green-600 text-white game-font text-2xl py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+            BAŞLA!
+        </button>
+        <p id="name-error" class="text-red-500 mt-2 h-4"></p>
+    </div>
+
+    <!-- Oyun Ekranı (Başlangıçta gizli) -->
+    <div id="game-screen" class="w-full max-w-lg mx-auto bg-white rounded-3xl shadow-2xl p-6 sm:p-8 text-center border-4 border-blue-300 hidden">
+        <p id="player-name-display" class="text-2xl game-font text-orange-500 mb-4"></p>
+        
+        <div class="flex justify-around items-center bg-blue-100 rounded-xl p-3 mb-6">
+            <div class="text-lg font-bold text-blue-800">
+                <span class="game-font">🏆 SEVİYE</span><br>
+                <span id="level" class="text-3xl game-font">1</span>
+            </div>
+            <div class="text-lg font-bold text-green-600">
+                <span class="game-font">⭐ PUAN</span><br>
+                <span id="score" class="text-3xl game-font">0</span>
+            </div>
+        </div>
+        
+        <div class="w-full bg-gray-200 rounded-full h-4 mb-5 border-2 border-gray-300">
+            <div id="progress-bar" class="bg-yellow-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+
+        <div id="question-card" class="bg-sky-200 rounded-2xl p-6 mb-6 min-h-[120px] flex items-center justify-center border-4 border-sky-300">
+            <p id="question" class="text-4xl sm:text-5xl font-bold text-sky-900 game-font"></p>
+        </div>
+
+        <div id="answer-container" class="space-y-3"></div>
+
+        <div id="feedback-container" class="mt-6 text-xl game-font h-8"></div>
+        
+        <button id="show-answer-button" class="w-full mt-4 bg-purple-500 hover:bg-purple-600 text-white game-font text-xl py-3 px-4 rounded-xl shadow-lg hidden">
+            Doğru Cevabı Gör
+        </button>
+        <button id="next-button" class="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white game-font text-2xl py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 hidden">
+            Devam
+        </button>
+    </div>
+
+    <script>
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const startButton = document.getElementById('start-button');
+        const nameInput = document.getElementById('name-input');
+        const nameErrorEl = document.getElementById('name-error');
+        const playerNameDisplayEl = document.getElementById('player-name-display');
+        const questionEl = document.getElementById('question');
+        const answerContainerEl = document.getElementById('answer-container');
+        const feedbackContainerEl = document.getElementById('feedback-container');
+        const scoreEl = document.getElementById('score');
+        const levelEl = document.getElementById('level');
+        const nextButton = document.getElementById('next-button');
+        const showAnswerButton = document.getElementById('show-answer-button');
+        const questionCard = document.getElementById('question-card');
+        const progressBarEl = document.getElementById('progress-bar');
+        
+        let playerName = '';
+        let gameState = {
+            score: 0, level: 1, questionsPerLevel: 5, questionsAnsweredInLevel: 0, currentQuestion: {}, attempts: 0
+        };
+
+        const birler = ["", "bir", "iki", "üç", "dört", "beş", "altı", "yedi", "sekiz", "dokuz"];
+        const onlar = ["", "on", "yirmi", "otuz", "kırk", "elli", "altmış", "yetmiş", "seksen", "doksan"];
+
+        function sayiyiYaziyaCevir(sayi) {
+             if (sayi === 0) return "sıfır";
+            let yazi = "";
+            if (sayi >= 1000) {
+                const binler = Math.floor(sayi / 1000);
+                yazi += (binler > 1 ? birler[binler] + " " : "") + "bin ";
+                sayi %= 1000;
+            }
+            if (sayi >= 100) {
+                const yuzler = Math.floor(sayi / 100);
+                yazi += (yuzler > 1 ? birler[yuzler] + " " : "") + "yüz ";
+                sayi %= 100;
+            }
+            if (sayi >= 10) {
+                 const onluk = Math.floor(sayi / 10);
+                 yazi += onlar[onluk] + " ";
+                 sayi %= 10;
+            }
+            if (sayi > 0) yazi += birler[sayi];
+            return yazi.trim();
+        }
+
+        function generateQuestion() {
+            gameState.attempts = 0;
+            nextButton.classList.add('hidden');
+            showAnswerButton.classList.add('hidden');
+            feedbackContainerEl.textContent = '';
+            feedbackContainerEl.className = 'mt-6 text-xl game-font h-8';
+            answerContainerEl.innerHTML = '';
+            questionCard.classList.remove('correct-animation', 'incorrect-animation');
+
+            let min, max;
+            switch(gameState.level) {
+                case 1: min = 100; max = 299; break;
+                case 2: min = 300; max = 599; break;
+                case 3: min = 600; max = 999; break;
+                case 4: min = 1000; max = 1999; break;
+                default: min = 2000; max = 9999; break;
+            }
+            const number = Math.floor(Math.random() * (max - min + 1)) + min;
+            const word = sayiyiYaziyaCevir(number);
+            const questionType = Math.random() > 0.5 ? 'numberToWord' : 'wordToNumber';
+            gameState.currentQuestion = { number, word, type: questionType };
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            if (gameState.currentQuestion.type === 'numberToWord') {
+                questionEl.textContent = gameState.currentQuestion.number;
+                const options = [gameState.currentQuestion.word];
+                let min = gameState.level <= 3 ? 100 : 1000;
+                let max = gameState.level <= 3 ? 999 : 9999;
+                while (options.length < 3) {
+                    const wrongNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+                    const wrongWord = sayiyiYaziyaCevir(wrongNumber);
+                    if (!options.includes(wrongWord)) options.push(wrongWord);
+                }
+                options.sort(() => Math.random() - 0.5);
+                options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.className = "w-full bg-blue-200 hover:bg-yellow-300 text-blue-800 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 text-lg";
+                    button.onclick = () => checkAnswer(option, button);
+                    answerContainerEl.appendChild(button);
+                });
+            } else {
+                questionEl.textContent = gameState.currentQuestion.word;
+                const input = document.createElement('input');
+                input.type = 'number'; input.id = 'number-input';
+                input.className = "w-full text-center p-3 border-2 border-gray-300 rounded-lg text-2xl focus:border-blue-500 focus:ring-blue-500 game-font";
+                input.placeholder = "Sayıyı yaz";
+                answerContainerEl.appendChild(input);
+                input.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('check-btn').click(); });
+                const checkBtn = document.createElement('button');
+                checkBtn.id = 'check-btn'; checkBtn.textContent = 'Kontrol Et';
+                checkBtn.className = "w-full mt-2 bg-green-500 hover:bg-green-600 text-white game-font text-xl py-3 px-4 rounded-lg transition-all duration-300";
+                checkBtn.onclick = () => {
+                    const inputEl = document.getElementById('number-input');
+                    const userAnswer = inputEl.value;
+                    checkAnswer(userAnswer ? parseInt(userAnswer) : '', inputEl);
+                };
+                answerContainerEl.appendChild(checkBtn);
+            }
+        }
+        
+        function checkAnswer(userAnswer, element = null) {
+            const isCorrect = (gameState.currentQuestion.type === 'numberToWord') ? userAnswer === gameState.currentQuestion.word : userAnswer === gameState.currentQuestion.number;
+
+            if (isCorrect) {
+                gameState.score += (gameState.attempts === 0) ? 10 : 5; // İlk denemede daha çok puan
+                gameState.questionsAnsweredInLevel++;
+                feedbackContainerEl.textContent = `SÜPERSİN, ${playerName}!`;
+                feedbackContainerEl.className = 'mt-6 text-xl game-font h-8 text-green-600';
+                questionCard.classList.add('correct-animation');
+                Array.from(answerContainerEl.children).forEach(child => child.disabled = true);
+                updateProgressBar();
+                if (gameState.questionsAnsweredInLevel >= gameState.questionsPerLevel) {
+                    setTimeout(levelUp, 800);
+                } else {
+                    nextButton.classList.remove('hidden');
+                }
+                scoreEl.textContent = gameState.score;
+                return;
+            }
+
+            // Cevap yanlışsa
+            gameState.attempts++;
+            if (gameState.attempts === 1) { // İlk hata
+                feedbackContainerEl.textContent = 'Hmm, tam değil. Tekrar dene!';
+                feedbackContainerEl.className = 'mt-6 text-xl game-font h-8 text-blue-500';
+                if(element) {
+                    element.classList.add('incorrect-animation');
+                    setTimeout(() => element.classList.remove('incorrect-animation'), 600);
+                    if(gameState.currentQuestion.type === 'numberToWord') {
+                        element.disabled = true;
+                        element.classList.add('bg-red-300', 'hover:bg-red-300', 'cursor-not-allowed');
+                    } else {
+                        element.value = '';
+                    }
+                }
+            } else { // İkinci hata
+                feedbackContainerEl.textContent = 'Bu soru biraz zorladı galiba!';
+                feedbackContainerEl.className = 'mt-6 text-xl game-font h-8 text-red-600';
+                Array.from(answerContainerEl.children).forEach(child => child.disabled = true);
+                showAnswerButton.classList.remove('hidden');
+            }
+        }
+        
+        showAnswerButton.onclick = () => {
+            feedbackContainerEl.textContent = `Doğrusu: ${gameState.currentQuestion.type === 'numberToWord' ? gameState.currentQuestion.word : gameState.currentQuestion.number}`;
+            showAnswerButton.classList.add('hidden');
+            nextButton.classList.remove('hidden');
+        };
+
+        function updateProgressBar() {
+            progressBarEl.style.width = `${(gameState.questionsAnsweredInLevel / gameState.questionsPerLevel) * 100}%`;
+        }
+
+        function levelUp() {
+            gameState.level++;
+            gameState.questionsAnsweredInLevel = 0;
+            levelEl.textContent = gameState.level;
+            updateProgressBar();
+            feedbackContainerEl.textContent = `HARİKASIN ${playerName}, SEVİYE ATLADIN!`;
+            feedbackContainerEl.classList.add('level-up-animation', 'text-orange-500');
+            nextButton.classList.remove('hidden');
+        }
+
+        function startGame() {
+            const rawPlayerName = nameInput.value.trim();
+            if (rawPlayerName) {
+                playerName = rawPlayerName.charAt(0).toUpperCase() + rawPlayerName.slice(1).toLowerCase();
+                startScreen.classList.add('hidden');
+                gameScreen.classList.remove('hidden');
+                gameScreen.classList.add('swoop-in');
+                playerNameDisplayEl.textContent = `Hadi bakalım, ${playerName}!`;
+                generateQuestion();
+            } else {
+                nameErrorEl.textContent = "Lütfen ismini girerek başla!";
+                setTimeout(() => { nameErrorEl.textContent = '' }, 2000);
+            }
+        }
+        
+        startButton.addEventListener('click', startGame);
+        nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
+        nextButton.addEventListener('click', generateQuestion);
+    </script>
+</body>
+</html>
+
+

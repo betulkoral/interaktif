@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B mi D mi? - Harf ve Cümle Öğrenme</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Comic Neue', cursive;
+            background-color: #f0f9ff;
+        }
+
+        .letter-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border: 3px dashed #94a3b8;
+            border-radius: 10px;
+            margin: 0 5px;
+            font-size: 2rem;
+            color: #1e293b;
+            background-color: white;
+            transition: all 0.3s ease;
+            vertical-align: middle;
+        }
+
+        .btn-choice {
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .btn-choice:active {
+            transform: scale(0.9);
+        }
+
+        .correct-anim {
+            animation: bounce 0.5s ease;
+            border-color: #22c55e !important;
+            color: #22c55e !important;
+            border-style: solid !important;
+        }
+
+        .wrong-anim {
+            animation: shake 0.5s ease;
+            border-color: #ef4444 !important;
+            color: #ef4444 !important;
+            border-style: solid !important;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="game-container" class="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 text-center border-b-8 border-blue-200">
+        
+        <!-- Üst Panel -->
+        <div class="flex justify-between items-center mb-6">
+            <div class="bg-blue-100 px-4 py-2 rounded-full text-blue-700 font-bold">
+                Puan: <span id="correct-count">0</span>
+            </div>
+            <div id="mode-tag" class="bg-purple-100 px-4 py-2 rounded-full text-purple-700 font-bold">
+                Kelime Modu
+            </div>
+            <div id="status-dot" class="w-4 h-4 rounded-full bg-gray-200"></div>
+        </div>
+
+        <!-- Soru Alanı -->
+        <div class="mb-10">
+            <h2 id="instruction" class="text-xl text-gray-500 mb-6">Eksik harfi kutucuğa yerleştir:</h2>
+            <div id="word-display" class="text-3xl md:text-4xl font-bold leading-relaxed flex items-center justify-center flex-wrap gap-y-4">
+                <!-- İçerik JS ile dolacak -->
+            </div>
+        </div>
+
+        <!-- Seçenekler -->
+        <div id="controls" class="grid grid-cols-2 gap-6 mb-6">
+            <button onclick="handleChoice('b')" class="btn-choice bg-orange-400 hover:bg-orange-500 text-white text-5xl font-bold py-6 rounded-2xl shadow-lg border-b-4 border-orange-600">
+                b
+            </button>
+            <button onclick="handleChoice('d')" class="btn-choice bg-indigo-400 hover:bg-indigo-500 text-white text-5xl font-bold py-6 rounded-2xl shadow-lg border-b-4 border-indigo-600">
+                d
+            </button>
+        </div>
+
+        <!-- Mesaj Kutusu -->
+        <div id="feedback" class="h-16 flex items-center justify-center text-xl font-bold mb-4"></div>
+
+        <!-- Geçiş Butonu (Başta Gizli) -->
+        <div id="next-mode-container" class="hidden">
+            <button onclick="startSentenceMode()" class="bg-green-500 hover:bg-green-600 text-white px-10 py-4 rounded-2xl text-2xl font-bold shadow-xl border-b-4 border-green-700 transition-all">
+                Harika! Cümlelere Geç ➔
+            </button>
+        </div>
+
+        <!-- Bitti Ekranı -->
+        <div id="finish-screen" class="hidden fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-8">
+            <h1 class="text-5xl text-green-600 font-bold mb-4">Tebrikler! 🎉</h1>
+            <p class="text-2xl text-gray-600 mb-8 text-center">Hem kelimeleri hem cümleleri bitirdin!</p>
+            <button onclick="location.reload()" class="bg-blue-500 text-white px-10 py-4 rounded-2xl text-xl font-bold shadow-lg">Baştan Başla</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Yeni eklenen kelimelerle güncellenmiş liste
+        const words = [
+            { text: "_ede", answer: "d" },
+            { text: "ör_ek", answer: "d" },
+            { text: "_ebek", answer: "b" },
+            { text: "el_iven", answer: "d" },
+            { text: "ka_a", answer: "b" },
+            { text: "_uman", answer: "d" },
+            { text: "_örek", answer: "b" },
+            { text: "_alkon", answer: "b" },
+            { text: "a_la", answer: "b" },
+            { text: "ta_ak", answer: "b" },
+            { text: "_ere", answer: "b" },
+            { text: "nö_et", answer: "b" },
+            { text: "çu_uk", answer: "b" },
+            { text: "ke_i", answer: "d" }
+        ];
+
+        const sentences = [
+            { text: "Annem _ebek için süt aldı.", answer: "b" },
+            { text: "_eniz kıyısında kum oynadık.", answer: "d" },
+            { text: "Mavi _ulutlar gökyüzünü kapladı.", answer: "b" },
+            { text: "Ali, _olaptan elma getirdi.", answer: "d" },
+            { text: "Küçük _alık suda yüzüyor.", answer: "b" }
+        ];
+
+        let queue = [...words];
+        let isSentenceMode = false;
+        let correctCount = 0;
+        let isProcessing = false;
+
+        function updateDisplay() {
+            const container = document.getElementById('word-display');
+            container.innerHTML = '';
+            
+            if (queue.length === 0) {
+                if (!isSentenceMode) {
+                    showTransitionButton();
+                } else {
+                    document.getElementById('finish-screen').classList.remove('hidden');
+                }
+                return;
+            }
+
+            const current = queue[0];
+            const parts = current.text.split('_');
+            
+            parts.forEach((part, index) => {
+                if(part) {
+                    const span = document.createElement('span');
+                    span.innerText = part;
+                    container.appendChild(span);
+                }
+                
+                if (index < parts.length - 1) {
+                    const box = document.createElement('div');
+                    box.className = 'letter-box';
+                    box.id = 'current-box';
+                    box.innerText = '?';
+                    container.appendChild(box);
+                }
+            });
+        }
+
+        function showTransitionButton() {
+            document.getElementById('instruction').innerText = "Kelimeler Bitti!";
+            document.getElementById('controls').classList.add('hidden');
+            document.getElementById('next-mode-container').classList.remove('hidden');
+            document.getElementById('word-display').innerHTML = '<span class="text-green-500">Süper İlerliyorsun!</span>';
+        }
+
+        function startSentenceMode() {
+            isSentenceMode = true;
+            queue = [...sentences];
+            document.getElementById('mode-tag').innerText = "Cümle Modu";
+            document.getElementById('mode-tag').className = "bg-orange-100 px-4 py-2 rounded-full text-orange-700 font-bold";
+            document.getElementById('instruction').innerText = "Cümledeki eksik harfi bul:";
+            document.getElementById('controls').classList.remove('hidden');
+            document.getElementById('next-mode-container').classList.add('hidden');
+            updateDisplay();
+        }
+
+        function handleChoice(choice) {
+            if (isProcessing || queue.length === 0) return;
+            isProcessing = true;
+
+            const current = queue[0];
+            const box = document.getElementById('current-box');
+            const feedback = document.getElementById('feedback');
+            const statusDot = document.getElementById('status-dot');
+
+            // Eğer boşluk cümlenin veya kelimenin en başındaysa harfi büyük yap
+            const isAtStart = current.text.startsWith('_');
+            const displayLetter = isAtStart ? choice.toUpperCase() : choice;
+            const correctLetter = isAtStart ? current.answer.toUpperCase() : current.answer;
+
+            if (choice === current.answer) {
+                box.innerText = displayLetter;
+                box.classList.add('correct-anim');
+                feedback.innerText = 'Doğru! 🌟';
+                feedback.className = 'h-16 flex items-center justify-center text-2xl font-bold text-green-500';
+                statusDot.className = 'w-4 h-4 rounded-full bg-green-500';
+                
+                correctCount++;
+                document.getElementById('correct-count').innerText = correctCount;
+
+                setTimeout(() => {
+                    queue.shift();
+                    resetUI();
+                }, 1200);
+
+            } else {
+                box.innerText = correctLetter;
+                box.classList.add('wrong-anim');
+                feedback.innerText = `Dikkat! Doğrusu "${correctLetter}"`;
+                feedback.className = 'h-16 flex items-center justify-center text-2xl font-bold text-red-500';
+                statusDot.className = 'w-4 h-4 rounded-full bg-red-500';
+
+                setTimeout(() => {
+                    const wrongItem = queue.shift();
+                    // Yanlış bilineni 2 sıra sonraya at
+                    if (queue.length >= 2) {
+                        queue.splice(2, 0, wrongItem);
+                    } else {
+                        queue.push(wrongItem);
+                    }
+                    resetUI();
+                }, 2000);
+            }
+        }
+
+        function resetUI() {
+            isProcessing = false;
+            document.getElementById('feedback').innerText = '';
+            document.getElementById('status-dot').className = 'w-4 h-4 rounded-full bg-gray-200';
+            updateDisplay();
+        }
+
+        window.onload = updateDisplay;
+    </script>
+</body>
+</html>

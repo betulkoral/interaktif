@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaratıcılık Etkinlik Atölyesi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f0f4f8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            touch-action: none;
+            cursor: crosshair;
+            background: white;
+            border-radius: 12px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .active-tool {
+            background-color: #3b82f6 !important;
+            color: white !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center shadow-inner">
+                <span class="text-2xl">🎨</span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Yaratıcılık Atölyesi</h1>
+                <p class="text-xs text-gray-500" id="page-title">Yükleniyor...</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button id="prevBtn" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">⬅️</button>
+            <span id="pageCounter" class="flex items-center font-semibold text-gray-700 px-2">1 / 5</span>
+            <button id="nextBtn" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">➡️</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col md:flex-row p-4 gap-4 max-w-7xl mx-auto w-full">
+        
+        <!-- Drawing Area -->
+        <div class="flex-1 bg-white p-4 rounded-2xl shadow-lg flex flex-col">
+            <div class="flex flex-wrap gap-2 mb-4 items-center justify-between">
+                <div class="flex gap-2">
+                    <button id="penBtn" class="p-2 bg-gray-100 rounded-lg active-tool" title="Kalem">✏️</button>
+                    <button id="eraserBtn" class="p-2 bg-gray-100 rounded-lg" title="Silgi">🧽</button>
+                    <input type="color" id="colorPicker" class="w-10 h-10 border-none cursor-pointer bg-transparent" value="#000000">
+                    <select id="sizePicker" class="bg-gray-100 rounded-lg px-2 text-sm">
+                        <option value="2">İnce</option>
+                        <option value="5" selected>Orta</option>
+                        <option value="10">Kalın</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button id="clearBtn" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition-all">Temizle</button>
+                    <button id="downloadBtn" class="px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 font-medium transition-all">Kaydet</button>
+                </div>
+            </div>
+
+            <div id="canvasContainer" class="flex-1 relative border-2 border-dashed border-gray-200 rounded-xl overflow-hidden bg-white">
+                <div id="activityOverlay" class="absolute inset-0 pointer-events-none flex flex-col p-8 select-none z-0">
+                    <h2 id="activityName" class="text-2xl font-bold text-gray-100 opacity-20">Etkinlik Başlığı</h2>
+                </div>
+                <canvas id="mainCanvas" class="relative z-10"></canvas>
+            </div>
+            <div id="hintText" class="mt-2 text-sm text-blue-600 font-medium hidden">İpucu: Resimde saklanmış bir yıldız, bir daire ve bir üçgen bulabilir misin?</div>
+        </div>
+
+        <!-- Writing Area -->
+        <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow-lg flex flex-col border-t-4 border-yellow-400">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <span>📝</span> Notlarım & Cevaplarım
+            </h3>
+            <textarea id="notesArea" class="flex-1 p-4 bg-yellow-50 border-none rounded-xl focus:ring-2 focus:ring-yellow-400 resize-none text-gray-700 leading-relaxed" placeholder="Buraya yazabilirsin..."></textarea>
+            <div class="mt-4 text-xs text-gray-400 text-center">
+                Çalışman otomatik olarak hafızaya alınır.
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvasContainer');
+        const notesArea = document.getElementById('notesArea');
+        const pageTitle = document.getElementById('page-title');
+        const pageCounter = document.getElementById('pageCounter');
+        const activityName = document.getElementById('activityName');
+        const activityInstruction = document.getElementById('activityInstruction');
+        const hintText = document.getElementById('hintText');
+
+        // State
+        let drawing = false;
+        let currentTool = 'pen';
+        let currentPage = 0;
+        let pagesData = [
+            {
+                title: "1. Soğuk Şeyler Bana...",
+                instruction: "Soğuk şeyleri düşündüğün zaman aklına gelenleri çiz veya yaz.",
+                notes: "",
+                drawing: null
+            },
+            {
+                title: "2. Sıcak Şeyler Bana...",
+                instruction: "Sıcak şeyleri düşündüğün zaman aklına gelenleri çiz veya yaz.",
+                notes: "",
+                drawing: null
+            },
+            {
+                title: "3. Noktadan Noktaya",
+                instruction: "1 numaralı noktadan başlayarak noktaları birleştir ve oluşan resmi isimlendir.",
+                notes: "",
+                drawing: null,
+                isConnectPoints: true
+            },
+            {
+                title: "4. Gizli Nesneler",
+                instruction: "Resmin içine saklanmış nesneleri bul ve daire içine al.",
+                notes: "",
+                drawing: null,
+                isHiddenItems: true
+            },
+            {
+                title: "5. Serbest Yaratıcılık",
+                instruction: "Bugün kendini nasıl hissediyorsun? Bir resimle anlat.",
+                notes: "",
+                drawing: null
+            }
+        ];
+
+        function resizeCanvas() {
+            const rect = container.getBoundingClientRect();
+            const tempDrawing = canvas.toDataURL();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            loadCurrentPage(tempDrawing);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+
+        function startDrawing(e) {
+            drawing = true;
+            draw(e);
+        }
+
+        function stopDrawing() {
+            drawing = false;
+            ctx.beginPath();
+            savePageDrawing();
+        }
+
+        function draw(e) {
+            if (!drawing) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            ctx.lineWidth = document.getElementById('sizePicker').value;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            if (currentTool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = 20;
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = document.getElementById('colorPicker').value;
+            }
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', stopDrawing);
+
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); }, {passive: false});
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, {passive: false});
+        canvas.addEventListener('touchend', stopDrawing);
+
+        document.getElementById('penBtn').onclick = () => {
+            currentTool = 'pen';
+            document.getElementById('penBtn').classList.add('active-tool');
+            document.getElementById('eraserBtn').classList.remove('active-tool');
+        };
+
+        document.getElementById('eraserBtn').onclick = () => {
+            currentTool = 'eraser';
+            document.getElementById('eraserBtn').classList.add('active-tool');
+            document.getElementById('penBtn').classList.remove('active-tool');
+        };
+
+        document.getElementById('clearBtn').onclick = () => {
+            if(confirm('Tüm çizimi temizlemek istediğine emin misin?')) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const data = pagesData[currentPage];
+                if (data.isConnectPoints) drawDots();
+                if (data.isHiddenItems) drawHiddenScene();
+                savePageDrawing();
+            }
+        };
+
+        function updatePageDisplay() {
+            const data = pagesData[currentPage];
+            pageTitle.innerText = data.title;
+            activityName.innerText = data.title;
+            pageCounter.innerText = `${currentPage + 1} / ${pagesData.length}`;
+            notesArea.value = data.notes;
+            
+            if (data.isHiddenItems) {
+                hintText.classList.remove('hidden');
+            } else {
+                hintText.classList.add('hidden');
+            }
+        }
+
+        function savePageDrawing() {
+            pagesData[currentPage].drawing = canvas.toDataURL();
+            pagesData[currentPage].notes = notesArea.value;
+        }
+
+        function loadCurrentPage(restoreData = null) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const data = pagesData[currentPage];
+            
+            if (data.isConnectPoints) {
+                drawDots();
+            }
+            if (data.isHiddenItems) {
+                drawHiddenScene();
+            }
+
+            const source = restoreData || data.drawing;
+            if (source && source !== "data:,") {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = source;
+            }
+            updatePageDisplay();
+        }
+
+        function drawDots() {
+            const basePoints = [
+                {x: 0.3, y: 0.6}, {x: 0.3, y: 0.4}, {x: 0.25, y: 0.25}, 
+                {x: 0.4, y: 0.35}, {x: 0.6, y: 0.35}, {x: 0.75, y: 0.25}, 
+                {x: 0.7, y: 0.4}, {x: 0.7, y: 0.6}, {x: 0.6, y: 0.7}, 
+                {x: 0.4, y: 0.7}
+            ];
+
+            ctx.fillStyle = "#3b82f6";
+            ctx.font = "bold 16px Arial";
+            ctx.textAlign = "center";
+            
+            basePoints.forEach((p, index) => {
+                const x = p.x * canvas.width;
+                const y = p.y * canvas.height;
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "#1e40af";
+                ctx.fillText(index + 1, x, y - 12);
+                ctx.fillStyle = "#3b82f6";
+            });
+        }
+
+        function drawHiddenScene() {
+            ctx.strokeStyle = "#cbd5e1";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+
+            // Draw a forest/garden scene
+            for (let i = 0; i < 15; i++) {
+                const x = Math.random() * canvas.width;
+                const h = 50 + Math.random() * 150;
+                // Trees
+                ctx.strokeRect(x, canvas.height - h, 20, h);
+                ctx.beginPath();
+                ctx.arc(x+10, canvas.height - h, 40, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Hidden Objects (Solid lines, but light color)
+            ctx.setLineDash([]);
+            ctx.strokeStyle = "#e2e8f0";
+            
+            // Hidden Star
+            drawStar(canvas.width * 0.2, canvas.height * 0.3, 5, 20, 10);
+            // Hidden Circle
+            ctx.beginPath();
+            ctx.arc(canvas.width * 0.8, canvas.height * 0.7, 15, 0, Math.PI * 2);
+            ctx.stroke();
+            // Hidden Triangle
+            ctx.beginPath();
+            ctx.moveTo(canvas.width * 0.5, canvas.height * 0.5);
+            ctx.lineTo(canvas.width * 0.53, canvas.height * 0.55);
+            ctx.lineTo(canvas.width * 0.47, canvas.height * 0.55);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function drawStar(cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        document.getElementById('prevBtn').onclick = () => {
+            if (currentPage > 0) {
+                savePageDrawing();
+                currentPage--;
+                loadCurrentPage();
+            }
+        };
+
+        document.getElementById('nextBtn').onclick = () => {
+            if (currentPage < pagesData.length - 1) {
+                savePageDrawing();
+                currentPage++;
+                loadCurrentPage();
+            }
+        };
+
+        notesArea.oninput = () => {
+            pagesData[currentPage].notes = notesArea.value;
+        };
+
+        document.getElementById('downloadBtn').onclick = () => {
+            const link = document.createElement('a');
+            link.download = `etkinlik-sayfa-${currentPage + 1}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        };
+
+    </script>
+</body>
+</html>

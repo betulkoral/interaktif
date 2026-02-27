@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hikaye Dünyası</title>
+    <!-- Tailwind CSS'i projemize dahil ediyoruz -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ekranı ortalamak ve genel görünümü iyileştirmek için temel stiller */
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.5s ease;
+        }
+        /* Cümleler arası geçişin daha yumuşak olması için bir animasyon ekliyoruz */
+        .sentence {
+            transition: all 0.3s ease-in-out;
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: inline; /* Cümlelerin alt alta değil, yan yana devam etmesini sağlar */
+            line-height: 2;
+        }
+        /* Vurgulanan cümlenin stilini belirliyoruz */
+        .highlight {
+            color: white;
+        }
+        
+        /* Ekran geçişleri için animasyon */
+        .screen {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            width: 100%;
+        }
+        .screen.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none; /* Gizli ekranda tıklamaları engeller */
+            position: absolute; /* Akışı bozmamak için */
+            top: 0;
+            left: 0;
+        }
+        .character-card, .story-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .character-card:hover, .story-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Ana Konteyner -->
+    <div class="w-full max-w-5xl mx-auto relative">
+
+        <!-- Karakter Seçim Ekranı -->
+        <div id="character-selection-screen" class="screen">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-bold text-slate-800">Oyuncak Hikayeleri</h1>
+                <p class="text-slate-600 mt-2 text-lg">Hangi kahramanla bir maceraya atılmak istersin?</p>
+            </div>
+            <div id="character-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Karakter Kartları JavaScript ile buraya eklenecek -->
+            </div>
+        </div>
+
+        <!-- Hikaye Listesi Ekranı (Başlangıçta gizli) -->
+        <div id="story-list-screen" class="screen hidden">
+            <button id="back-to-characters-button" class="mb-6 bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors">
+                &larr; Karakter Seç
+            </button>
+            <div id="character-header" class="text-center mb-10">
+                <!-- Karakter başlığı JavaScript ile buraya eklenecek -->
+            </div>
+            <div id="story-list-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Hikaye listesi JavaScript ile buraya eklenecek -->
+            </div>
+        </div>
+
+        <!-- Hikaye Okuma Ekranı (Başlangıçta gizli) -->
+        <div id="story-screen" class="screen hidden">
+             <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-10 w-full max-w-3xl mx-auto">
+                <button id="back-to-story-list-button" class="mb-6 bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors">
+                    &larr; Hikaye Listesi
+                </button>
+                <h1 id="story-title" class="text-3xl md:text-4xl font-bold text-sky-800 mb-6 text-center"></h1>
+                <div id="story-text" class="text-lg md:text-xl text-slate-700 leading-relaxed"></div>
+                <div class="mt-8 text-center text-slate-500 text-sm border-t pt-4">
+                    <p>Cümleler arasında gezinmek için <strong class="text-sky-600">←</strong> ve <strong class="text-sky-600">→</strong> ok tuşlarını kullan.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const characters = [
+            {
+                id: 'woody',
+                name: 'Woody',
+                // KENDİ GÖRSELİNİ EKLEMEK İÇİN: Aşağıdaki linki kendi resminin linkiyle değiştir.
+                image: 'https://placehold.co/400x400/D2B48C/FFFFFF?text=Kovboy&font=lora',
+                color: 'bg-yellow-600',
+                highlightColor: 'bg-yellow-700',
+                bgColor: 'bg-yellow-100',
+                stories: [
+                    { id: 'w1', title: 'Kayıp Şapka Macerası', sentences: [ "Kovboy Woody bir sabah uyandığında en sevdiği şapkasını bulamadı.", "Şapkası olmadan gerçek bir kovboy gibi hissedemiyordu.", "Hemen en yakın arkadaşı Buzz'dan yardım istedi.", "Birlikte bütün oyuncak kutusunu ve yatağın altını aradılar.", "Slinky, esnek vücuduyla koltuğun en arkasına kadar uzandı.", "Rex, endişeyle etrafta dolanıp onlara ipuçları bulmaya çalıştı.", "Sonunda Jessie, şapkayı bebek arabasının içinde buldu.", "Meğer küçük bir oyuncak bebek, şapkayı kendisine yuva yapmış.", "Woody şapkasına kavuştuğu için çok mutlu oldu.", "Tüm arkadaşlarına yardımları için teşekkür etti ve takım çalışmasının ne kadar önemli olduğunu anladı." ] },
+                    { id: 'w2', title: 'Güneşli Piknik', sentences: [ "Woody, oyuncaklar için harika bir piknik düzenlemeye karar verdi.", "Herkes en sevdiği atıştırmalığı getirdi.", "Ancak bir anda bir karınca ordusu piknik örtüsüne doğru yürümeye başladı.", "Oyuncaklar önce biraz panikledi.", "Fakat Woody'nin bir planı vardı.", "Yeşil askerleri karıncaların önüne bir barikat kurmak için görevlendirdi.", "Slinky, yiyecekleri daha yüksek bir yere taşıdı.", "Karıncalar pes edip geri döndüler.", "Woody sayesinde piknikleri kurtulmuştu.", "Hep birlikte lezzetli yemeklerinin tadını çıkardılar." ] },
+                    { id: 'w3', title: 'Gizemli Not', sentences: [ "Woody, oyuncak kutusunda katlanmış bir kağıt parçası buldu.", "Üzerinde 'Hazineyi bul' yazan gizemli bir not vardı.", "Hemen bir dedektif gibi ipuçlarını aramaya başladı.", "Notun arkasında bir yatak resmi çiziliydi.", "Ekip olarak yatağın altına baktılar.", "Orada 'kitapların konuştuğu yere git' yazan başka bir not buldular.", "Kitaplığa tırmandılar ve bir sonraki ipucunu aradılar.", "Son ipucu onları Andy'nin kumbarasına götürdü.", "İçinde hazine olarak parlak bir jeton buldular.", "Woody ve arkadaşları için çok eğlenceli bir gündü." ] },
+                    { id: 'w4', title: 'Yeni Oyuncak', sentences: ["Bir gün Andy odaya yepyeni bir oyuncak robotla geldi.", "Yeni oyuncak başta biraz utangaç ve sessizdi.", "Diğer oyuncaklar onunla nasıl konuşacaklarını bilemediler.", "Woody, arkadaş canlısı bir lider olarak hemen yanına gitti.", "Ona oyuncakların kurallarını anlattı ve herkesle tanıştırdı.", "Buzz, robota odanın en güzel yerlerini gösterdi.", "Jessie ona eğlenceli oyunlar oynamayı teklif etti.", "Yeni robot kısa sürede kendini ailenin bir parçası gibi hissetti.", "Woody sayesinde kimse kendini dışlanmış hissetmiyordu.", "Oda, yeni bir arkadaş kazandığı için çok mutluydu."]},
+                    { id: 'w5', title: 'Tren Soygunu', sentences: ["Woody, 'Hadi bir Vahşi Batı oyunu oynayalım!' dedi.", "Oyuncak tren setini kurdular ve Slinky'yi vagon yaptılar.", "Woody şerif oldu, Jessie de onun yardımcısıydı.", "Yeşil askerler kötü haydutlar rolünü üstlendiler.", "Haydutlar, oyuncak treni durdurup şekerleri çalmaya çalıştılar.", "Şerif Woody ve Jessie atları Gözü Kara ile olay yerine geldiler.", "Woody, 'Eller yukarı haydutlar!' diye bağırdı.", "Zekice bir planla haydutları yakaladılar ve şekerleri kurtardılar.", "Oyunun sonunda herkes kahkahalarla gülüyordu.", "Woody, odanın en iyi şerifi olduğunu bir kez daha kanıtladı."]},
+                    { id: 'w6', title: 'Saklambaç Şampiyonu', sentences: ["Oyuncaklar saklambaç oynamaya karar verdiler.", "Ebe olan Rex, gözlerini kapattı ve saymaya başladı.", "Herkes en iyi saklanma yerini bulmak için etrafa dağıldı.", "Buzz, uzay gemisi kutusunun içine girdi.", "Jessie, perdenin arkasına saklandı.", "Woody ise yatağın üzerindeki yastıkların arasına gizlendi.", "Kovboy şapkası sayesinde onu kimse fark etmiyordu.", "Rex herkesi buldu ama Woody'yi bir türlü bulamadı.", "Sonunda Woody kendisi ortaya çıktı.", "Herkes onun ne kadar iyi bir saklambaç oyuncusu olduğuna şaşırdı."]},
+                    { id: 'w7', title: 'Yetenek Gösterisi', sentences: ["Woody, 'Bu gece bir yetenek gösterisi yapıyoruz!' diye duyurdu.", "Her oyuncu en iyi numarasını hazırlamak için heyecanlandı.", "Buzz, lazer ışığıyla duvarda şekiller çizdi.", "Jessie, neşeli bir yodel şarkısı söyledi.", "Slinky, ne kadar uzağa esneyebileceğini gösterdi.", "Rex, en sevdiği video oyunundaki bir bölümü ezbere anlattı.", "Sıra Woody'ye geldiğinde, kementini havada ustaca çevirdi.", "Tüm oyuncular birbirlerini coşkuyla alkışladı.", "Herkesin kendine özgü bir yeteneği olduğunu gördüler.", "Woody'nin düzenlediği gösteri büyük bir başarıydı."]},
+                    { id: 'w8', title: 'Kırık İp', sentences: ["Woody'nin konuşmasını sağlayan ipi bir gün takılı kaldı.", "Ne kadar çekseler de çalışmıyordu.", "Woody bu duruma çok üzüldü.", "Arkadaşları ona yardım etmek için toplandı.", "Buzz, sorunun ne olduğunu görmek için sırtındaki mekanizmayı inceledi.", "Slinky, ince bir tel getirdi.", "Yeşil askerler, dikkatli bir operasyonla sıkışan ipi yerinden çıkardılar.", "Woody ipini tekrar çekti ve 'Kasabada yeni bir şerif var!' dedi.", "Tüm arkadaşları sevinçle bağırdı.", "Birlikte her sorunu çözebileceklerini biliyorlardı."]},
+                    { id: 'w9', title: 'Andy\'nin Ödevi', sentences: ["Andy, masanın üzerine kartondan bir yanardağ modeli bırakmıştı.", "Oyuncaklar merakla modeli incelemeye gittiler.", "Rex yanlışlıkla modele çarpınca bir parçası koptu.", "Herkes çok panikledi, çünkü Andy yakında dönecekti.", "Woody hemen bir tamir ekibi kurdu.", "Yapıştırıcı ve renkli kalemler getirdiler.", "Kopan parçayı dikkatlice yerine yapıştırdılar.", "Hatta eskisinden daha sağlam hale getirdiler.", "Andy odaya girdiğinde hiçbir şey fark etmedi.", "Woody ve ekibi sessizce günü kurtarmıştı."]},
+                    { id: 'w10', title: 'Bulutları İzlemek', sentences: ["Bazen en iyi macera hiçbir şey yapmamaktır.", "Woody ve Buzz, pencerenin önüne oturdular.", "Gökyüzündeki beyaz bulutları izliyorlardı.", "Woody, 'Şu bulut atıma benziyor,' dedi.", "Buzz ise, 'Şuradaki de bir uzay gemisi!' diye cevap verdi.", "Sadece orada oturup hayal kurdular.", "Bir oyuncağın hayatının ne kadar güzel olduğunu konuştular.", "Andy'nin onları ne kadar sevdiğini düşündüler.", "Hiçbir koşuşturma olmadan sakin bir an paylaştılar.", "Bu, onların en huzurlu maceralarından biriydi."]}
+                ]
+            },
+            {
+                id: 'buzz',
+                name: 'Buzz Lightyear',
+                // KENDİ GÖRSELİNİ EKLEMEK İÇİN: Aşağıdaki linki kendi resminin linkiyle değiştir.
+                image: 'https://drive.google.com/file/d/1XZqo9kcG55GWlxDNlQCCL543gWFSzbxa/view?usp=drive_link',
+                color: 'bg-purple-600',
+                highlightColor: 'bg-purple-700',
+                bgColor: 'bg-purple-100',
+                stories: [
+                    { id: 'b1', title: 'Yıldızlara Yolculuk', sentences: [ "Uzay Korucusu Buzz, her zaman gerçek bir uzay macerası hayal ederdi.", "Bir gün odadaki karton kutulardan kendi uzay gemisini yapmaya karar verdi.", "Diğer oyuncaklar da ona yardım etmek için hemen işe koyuldu.", "Yeşil uzaylılar, gemiyi parlak yıldız çıkartmalarıyla süslediler.", "Rex, geminin kanatlarını güçlü bir şekilde yapıştırdı.", "Woody, geminin kaptan köşküne bir pusula bile ekledi.", "Sonunda gemi hazırdı ve Buzz, 'Sonsuzluğa ve ötesine!' diye bağırdı.", "Tüm oyuncaklar geminin içine girip hayali bir galaksi yolculuğuna çıktılar.", "Odanın içinde gezegenlerden gezegenlere uçtular.", "Buzz, en iyi maceranın arkadaşlarla birlikte hayal kurmak olduğunu öğrendi." ] },
+                    { id: 'b2', title: 'Kayıp Uzaylı', sentences: ["Oyun zamanı bittiğinde, küçük yeşil uzaylılardan birinin eksik olduğu fark edildi.", "Herkes endişelendi.", "Buzz, 'Kimseyi geride bırakmayız!' diyerek bir arama ekibi kurdu.", "Woody feneri aldı, Jessie de etrafı kontrol etti.", "Yatağın altına, dolabın arkasına baktılar.", "Buzz, uzaylıların sesini taklit ederek 'Ooooh!' diye seslendi.", "Sonunda yorganın altından cılız bir ses geldi.", "Kayıp uzaylı uykuya dalmıştı.", "Onu buldukları için herkes çok sevindi.", "Buzz, görevini başarıyla tamamlamıştı."]},
+                    { id: 'b3', title: 'Kötü İmparator Zurg', sentences: ["Buzz'ın en büyük düşmanı İmparator Zurg oyuncağı rafta duruyordu.", "Buzz, 'Zurg bugün bir şeyler planlıyor olmalı, onu durdurmalıyız!' dedi.", "Oyuncaklar, Zurg'un 'kötü planını' engellemek için bir araya geldi.", "Yeşil askerler gizlice Zurg'un kalesine (bir yastık kulesi) yaklaştı.", "Woody, dikkatini dağıtmak için bir gürültü yaptı.", "Buzz, Zurg'un arkasından gizlice yaklaştı ve onu gıdıkladı.", "Zurg oyuncağı yere devrildi ve herkes kahkahalara boğuldu.", "Hayali düşmanlarını yenmek çok eğlenceliydi.", "Buzz, odanın güvenliğini bir kez daha sağlamıştı.", "Sonsuzluğa ve ötesine!"]},
+                    { id: 'b4', title: 'Uçuş Dersi', sentences: ["Buzz, kanatları olmasına rağmen uçamadığını biliyordu.", "Ama 'Stille Düşmek' konusunda bir uzmandı.", "Diğer oyuncaklara da bunu öğretmeye karar verdi.", "Onları yatağın üzerine topladı.", "'Önemli olan yere çarparken havalı görünmektir,' dedi.", "Kendisi yatağın üzerine atladı ve bir takla atarak indi.", "Rex, denemeye çalıştı ama sadece yatağa yuvarlandı.", "Woody, kovboy çizmeleriyle kayarak indi.", "Herkesin kendine özgü bir 'stille düşme' yöntemi vardı.", "Dersin sonunda hepsi çok eğlenmişti.", "Buzz, harika bir öğretmendi."]},
+                    { id: 'b5', title: 'Ay Keşfi', sentences: ["Oturma odasındaki gümüş rengi, tüylü halı Buzz'a Ay yüzeyini hatırlattı.", "'Ekip, bugün Ay'ı keşfedeceğiz!' diye anons etti.", "Oyuncaklar sessizce oturma odasına sızdılar.", "Halı üzerinde yavaş ve zıplayarak yürüdüler, yerçekimi yokmuş gibi davrandılar.", "Rex, 'Bu küçük bir adım ama benim için dev bir adım!' dedi.", "Kanepeyi bir uzay üssü olarak kullandılar.", "Sehpanın üzerindeki bir bardağı 'uzaylı kristali' olarak incelediler.", "Bu sessiz görev çok heyecan vericiydi.", "Buzz, hayal gücüyle her yeri bir maceraya çevirebiliyordu.", "Görev tamamlandığında sessizce odaya geri döndüler."]},
+                    { id: 'b6', title: 'Robot Dost', sentences: ["Andy'nin ailesi yeni bir robot süpürge almıştı.", "Yuvarlak ve kendi kendine hareket eden bu makine, oyuncakları başta biraz korkuttu.", "Ama Buzz, teknolojiye her zaman meraklıydı.", "Yavaşça süpürgeye yaklaştı ve onu inceledi.", "Ona 'Süpo' adını verdi.", "Süpo'nun üzerine bindi ve odada bir tur attı.", "Diğer oyuncaklar da bunun çok eğlenceli olduğunu gördü.", "Artık Süpo çalıştığında, hepsi sırayla üzerine binip geziyordu.", "Buzz, bilinmeyen şeylerden korkmamak gerektiğini öğrenmişti.", "Yeni robot dostlarıyla çok eğleniyorlardı."]},
+                    { id: 'b7', title: 'Mini Lazer Macerası', sentences: ["Buzz'ın kolundaki kırmızı lazer ışığı yanıp sönmeye başladı.", "'Uyarı! Enerji seviyesi kritik derecede düşük!' dedi Buzz.", "Pillerinin bittiğini anlamıştı.", "Yeni pillere ihtiyacı vardı ama piller uzaktaki bir çekmecedeydi.", "Buzz, 'Enerji Kristallerini Bulma Operasyonu' başlattı.", "Slinky, çekmeceye ulaşmak için bir köprü oldu.", "Askerler, yeni pilleri dikkatlice aşağı indirdi.", "Woody, eski pilleri çıkarıp yenilerini taktı.", "Buzz düğmeye bastı ve lazeri tekrar parlak bir şekilde yandı.", "Ekip çalışması sayesinde Buzz tekrar tam gücüne kavuşmuştu."]},
+                    { id: 'b8', title: 'Yıldız Haritası', sentences: ["Andy'nin odasının tavanı, parlayan yıldız çıkartmalarıyla doluydu.", "Buzz için bu, keşfedilmemiş bir galaksiydi.", "Bir kağıt ve kalem alarak bu galaksinin haritasını çıkarmaya karar verdi.", "Yatağın üzerine çıktı ve tavana dikkatlice baktı.", "Her bir yıldızın yerini kağıda çizdi.", "Onlara 'Büyük Ayı Takımyıldızı' gibi isimler verdi.", "Woody ona yardım etti ve bazı yıldızları birleştirdi.", "Harita bittiğinde, onu oyuncak kutusunun duvarına astılar.", "Artık kendi özel yıldız haritaları vardı.", "Buzz, her zaman bir kaşif ruhuna sahipti."]},
+                    { id: 'b9', title: 'Gezegen Modeli', sentences: ["Andy, okul ödevi için bir Güneş Sistemi modeli yapıyordu.", "Gezegenleri strafor köpükten yapıp boyamıştı.", "Buzz, bu modele hayran kalmıştı.", "Andy odadan çıkınca, diğer oyuncakları modelin yanına topladı.", "Onlara her bir gezegeni tanıttı.", "'Bu Mars, Kızıl Gezegen,' diye açıkladı.", "'Bu da Satürn, halkalarıyla ünlü.'", "Oyuncaklar, evren hakkında yeni şeyler öğrendiler.", "Rex, Jüpiter'in en büyük gezegen olmasına çok şaşırdı.", "Buzz, bilgi paylaşmanın da bir kahramanlık olduğunu biliyordu."]},
+                    { id: 'b10', title: 'Gizli Kod', sentences: ["Buzz, oyuncakların kendi aralarında gizlice iletişim kurabilmesi için bir plan yaptı.", "Bir Uzay Korucusu gizli kodu geliştirdi.", "Örneğin, bir göz kırpmak 'Andy geliyor' demekti.", "İki kere öksürmek 'tehlike var' anlamına geliyordu.", "Bütün oyuncaklara bu kodları öğretti.", "İlk başta biraz karışıklık oldu.", "Rex, sürekli yanlışlıkla öksürüp herkesi korkuttu.", "Ama zamanla kodu kullanmayı öğrendiler.", "Artık Andy odaya girdiğinde, tek bir göz kırpışıyla herkes anında oyuncak moduna geçebiliyordu.", "Buzz'ın kod sistemi mükemmel çalışıyordu."]}
+                ]
+            },
+            {
+                id: 'jessie',
+                name: 'Jessie',
+                // KENDİ GÖRSELİNİ EKLEMEK İÇİN: Aşağıdaki linki kendi resminin linkiyle değiştir.
+                image: 'https://placehold.co/400x400/FF4500/FFFFFF?text=Kovboy+Kız&font=lora',
+                color: 'bg-red-500',
+                highlightColor: 'bg-red-600',
+                bgColor: 'bg-red-100',
+                stories: [
+                    { id: 'j1', title: 'En Neşeli Rodeo', sentences: [ "Enerjik kovboy kız Jessie, odada canı sıkılan oyuncaklar için bir plan yaptı.", "\"Hadi bir rodeo düzenleyelim!\" diye neşeyle bağırdı.", "Atı Gözü Kara'nın üzerine atladı ve herkesi oyun alanına çağırdı.", "Woody, kement atma yarışması düzenledi.", "Buzz, lazer ışığıyla hedefleri vurma gösterisi yaptı.", "Slinky, üzerinden atlama engeli olarak herkese yardım etti.", "Jessie, en sevdiği şarkıyı söyleyerek herkesi dans ettirdi.", "O gün bütün oyuncaklar çok eğlendi ve kahkahalarla güldü.", "En sıkıcı gün bile Jessie'nin neşesiyle bir maceraya dönüşebilirdi.", "Rodeonun sonunda herkes Jessie'yi günün kahramanı ilan etti." ] },
+                    { id: 'j2', title: 'Kayıp Düğme', sentences: ["Jessie'nin gömleğindeki parlak sarı düğmelerden biri düşmüştü.", "Bu onu biraz üzdü, çünkü düğmelerini çok seviyordu.", "Hemen en iyi arkadaşı Gözü Kara ile düğmeyi aramaya başladı.", "Odanın her köşesine baktılar.", "Jessie, 'Yodel-ay-hee-hoo!' diye seslendi, belki düğme sesini duyardı.", "Woody ve Buzz da aramaya katıldı.", "Rex, yanlışlıkla düğmenin üzerine basmaktan çok korkuyordu.", "Sonunda Slinky, düğmeyi halının altında buldu.", "Woody, düğmeyi Jessie'nin gömleğine geri dikmek için bir iplik buldu.", "Jessie tekrar tamamlandığı için çok mutluydu."]},
+                    { id: 'j3', title: 'Yodel Dersi', sentences: ["Jessie, odanın en iyi yodel söyleyeniydi.", "Diğer oyuncaklar da ondan öğrenmek istediler.", "Jessie, 'Yodel Akademisi'ni kurduğunu duyurdu.", "İlk öğrencisi hevesli ama yeteneksiz Rex oldu.", "Rex denediğinde sadece komik bir gürültü çıkardı.", "Woody, kovboy tarzıyla fena sayılmazdı.", "Buzz ise robotik bir sesle 'Yo-del-ay-hee-hoo' dedi.", "Herkesin denemesi Jessie'yi çok güldürdü.", "En iyi yodel söyleyen olmasalar da, hepsi çok eğlendi.", "Jessie, önemli olanın denemek ve eğlenmek olduğunu söyledi."]},
+                    { id: 'j4', title: 'Büyük Yarış', sentences: ["Jessie, atı Gözü Kara'nın odanın en hızlısı olduğunu iddia etti.", "Buzz, bunun doğru olmadığını düşündü.", "Bir yarış düzenlemeye karar verdiler.", "Jessie ve Gözü Kara, RC arabasına karşı yarışacaktı.", "Yarış parkuru yatak odasından koridora kadardı.", "Yeşil askerler başlangıç işaretini verdi.", "Yarış başladığında RC arabası hızla öne geçti.", "Ama keskin bir virajda duvara çarptı.", "Jessie ve Gözü Kara sabit bir hızla devam ettiler ve yarışı kazandılar.", "Jessie, 'Yavaş ve istikrarlı olan yarışı kazanır!' dedi."]},
+                    { id: 'j5', title: 'Çiçek Bahçesi', sentences: ["Jessie, pencerenin dışındaki çiçekleri çok seviyordu.", "Bir gün, oyuncaklar için kendi bahçelerini yapmaya karar verdi.", "Renkli oyun hamurlarından çiçekler yaptılar.", "Yeşil pipetleri sap olarak kullandılar.", "Herkes kendi çiçeğini tasarladı.", "Rex, dev bir etobur bitki yaptı.", "Buzz, uzaydan gelmiş gibi görünen parlak bir çiçek yaptı.", "Oyuncak kutusunun bir köşesini bu renkli çiçeklerle süslediler.", "Artık odanın içinde de kendi neşeli bahçeleri vardı.", "Jessie'nin fikri odaya renk katmıştı."]},
+                    { id: 'j6', title: 'Korku Tüneli', sentences: ["Jessie, Rex'in korkularını yenmesine yardım etmek istedi.", "Yastıklardan ve battaniyelerden bir 'korku tüneli' yaptılar.", "Tünelin içi karanlıktı.", "Jessie, 'Korkma Rex, ben yanındayım,' dedi.", "İçeriye komik sesler çıkaran küçük oyuncaklar koydular.", "Rex başta tereddüt etti ama Jessie elini tuttu.", "Birlikte tünelden geçtiler.", "Diğer tarafa ulaştıklarında Rex kahkahalarla gülüyordu.", "Hiç de korkutucu olmadığını fark etti.", "Jessie, arkadaşına cesaret verdiği için çok gururluydu."]},
+                    { id: 'j7', title: 'Dans Partisi', sentences: ["Jessie, müziği ve dans etmeyi çok severdi.", "Bir akşam bir dans partisi düzenlemeye karar verdi.", "Andy'nin müzik kutusunu açtılar.", "Jessie, Woody ile kovboy dansı yaptı.", "Buzz, robotik hareketleriyle herkesi güldürdü.", "Slinky, yayıyla komik dans figürleri sergiledi.", "Rex, olduğu yerde zıplayarak dans etmeye çalıştı.", "Partinin en neşeli anı, herkesin bir daire olup şarkı söylemesiydi.", "Oda, müzik ve kahkahalarla doluydu.", "Jessie'nin partileri her zaman en iyisiydi."]},
+                    { id: 'j8', title: 'Eski Fotoğraf', sentences: ["Bir gün Jessie, Andy'nin annesinin eski bir fotoğrafını buldu.", "Fotoğrafta küçük bir kız ve bir kovboy kız oyuncağı vardı.", "Jessie, eski sahibi Emily'yi hatırladı.", "Arkadaşlarına Emily ile olan maceralarını anlattı.", "Birlikte ne kadar çok eğlendiklerini söyledi.", "Geçmişi hatırlamak onu biraz hüzünlendirdi.", "Ama Woody ona, 'Artık bizimle birliktesin ve biz senin aileniz,' dedi.", "Jessie gülümsedi ve arkadaşlarına sarıldı.", "Yeni ailesiyle birlikte olduğu için çok şanslıydı."]},
+                    { id: 'j9', title: 'At Gözü Kara\'nın Bakımı', sentences: ["Jessie, atı Gözü Kara'ya çok iyi bakardı.", "Her sabah onun yelesini tarar gibi yapardı.", "Ona en lezzetli hayali elmaları verirdi.", "Bazen onu odanın içinde dört nala koştururdu.", "Eğer Gözü Kara düşerse, hemen onu kaldırır ve 'İyi misin dostum?' diye sorardı.", "Diğer oyuncaklar, Jessie'nin atına olan sevgisine hayrandı.", "Gözü Kara konuşamasa da, Jessie onun ne düşündüğünü anlardı.", "Onların arasındaki bağ çok özeldi.", "Jessie, gerçek bir hayvanseverdi."]},
+                    { id: 'j10', title: 'Yeni Kement', sentences: ["Jessie'nin eski kemendi biraz yıpranmıştı.", "Woody, ona yeni bir kement yapmaya karar verdi.", "Ayakkabı bağcıklarından ve bir anahtarlıktan yeni bir kement yaptı.", "Jessie yeni kementini görünce çok sevindi.", "Hemen denemek için dışarı çıktılar.", "Kementiyle küçük bir topu yakalamayı başardı.", "Woody'ye teşekkür etti ve ona kocaman sarıldı.", "Artık rodeo gösterileri için yepyeni bir kemendi vardı.", "Bu, bir arkadaşın verebileceği en güzel hediyeydi."]}
+                ]
+            },
+            {
+                id: 'rex',
+                name: 'Rex',
+                // KENDİ GÖRSELİNİ EKLEMEK İÇİN: Aşağıdaki linki kendi resminin linkiyle değiştir.
+                image: 'https://placehold.co/400x400/228B22/FFFFFF?text=Dinozor&font=lora',
+                color: 'bg-green-500',
+                highlightColor: 'bg-green-600',
+                bgColor: 'bg-green-100',
+                stories: [
+                    { id: 'r1', title: 'Cesur Dinozor Rex', sentences: [ "Rex, büyük bir dinozor olmasına rağmen bazen küçük şeylerden korkardı.", "Bir gece yatağın altından gelen tıkırtılar duydu ve çok endişelendi.", "Acaba yatağın altında bir canavar mı vardı?", "Korkusunu yenmek için arkadaşlarından yardım istedi.", "Woody el fenerini aldı ve Buzz da cesurca ona eşlik etti.", "Yavaşça yatağın altına baktılar.", "Gördükleri şey bir canavar değil, sadece aşağı yuvarlanmış bir misketti.", "Misket duvara çarpıp tıkırtı yapıyordu.", "Rex o kadar rahatladı ki, sevinçle kükredi.", "O gün, korkularının üzerine arkadaşlarıyla gitmenin onu ne kadar cesur yaptığını anladı." ] },
+                    { id: 'r2', title: 'Video Oyunu Kralı', sentences: ["Andy'nin yeni bir video oyunu vardı.", "Rex, oyunu oynamak için sabırsızlanıyordu.", "Oyun, bir uzaylı istilasını konu alıyordu.", "Rex, küçük kollarıyla oyun kumandasını zorlukla tutuyordu.", "Ama oyunda inanılmaz derecede iyiydi.", "En yüksek skoru yaparak oyunu bitirdi.", "Diğer oyuncaklar onun başarısını hayranlıkla izledi.", "Buzz bile onun oyun yeteneğine şaşırmıştı.", "Rex, 'Ben bir oyun dinozoruyum!' diye neşeyle bağırdı.", "O gün Rex, odanın video oyunu kralı oldu."]},
+                    { id: 'r3', title: 'Kule Canavarı', sentences: ["Oyuncaklar, tahta bloklardan dev bir kule yapıyorlardı.", "Kule neredeyse tavana değiyordu.", "Herkes kulenin yıkılmasından korkuyordu.", "Rex, 'Ben bir canavar olup kuleyi yıkabilir miyim?' diye sordu.", "Woody, 'Elbette, bu bir oyun!' dedi.", "Rex, derin bir nefes aldı ve 'RAWRRR!' diye kükredi.", "Sonra kuleye doğru koştu ve onu devirdi.", "Bloklar her yere saçıldı ve herkes güldü.", "Bazen bir şeyleri yıkmak, yapmak kadar eğlenceli olabilirdi.", "Rex, en iyi kule canavarıydı."]},
+                    { id: 'r4', title: 'Kayıp Gözlük', sentences: ["Andy'nin babasının gözlüğü kaybolmuştu.", "Oyuncaklar, onu bulmak için bir arama başlattı.", "Rex, iyi bir gözlemci olduğunu kanıtlamak istiyordu.", "Odanın içinde bir dedektif gibi dolaştı.", "Her detayı dikkatlice inceledi.", "Kitapların arasına, yastıkların altına baktı.", "Sonunda gözlüğü kanepenin minderleri arasında buldu.", "Gözlüğü burnuna takıp 'Buldum!' diye bağırdı.", "Herkes onu tebrik etti.", "Rex, o gün harika bir iş çıkarmıştı."]},
+                    { id: 'r5', title: 'Korkunç Kükreme', sentences: ["Rex, her zaman korkutucu bir şekilde kükremek istemişti.", "Ama ne zaman denese, sadece cılız bir ses çıkıyordu.", "Bu onu çok üzüyordu.", "Jessie ona yardım etmeye karar verdi.", "'Daha derinden nefes almalısın Rex,' dedi.", "Rex, karnını şişirerek derin bir nefes aldı.", "Sonra tüm gücüyle bağırdı: 'RAAAAAWRRRR!'", "Bu seferki kükremesi o kadar güçlüydü ki, küçük askerler devrildi.", "Rex, sonunda başardığı için çok mutluydu.", "Artık gerçek bir Tyrannosaurus Rex gibi kükreyebiliyordu."]},
+                    { id: 'r6', title: 'Çay Partisi', sentences: ["Küçük Bo Peep, bir çay partisi düzenliyordu.", "Woody ve Buzz'ı davet etmişti ama bir misafiri eksikti.", "Rex'i de davet etmeye karar verdi.", "Rex, küçük fincanları devirmekten çok korkuyordu.", "'Ben çok sakarım,' dedi.", "Bo Peep, 'Sorun değil Rex, sadece eğlenmene bak,' dedi.", "Rex, çok dikkatli bir şekilde masaya oturdu.", "Hiçbir şeyi devirmeden hayali çayını içti.", "Parti çok keyifliydi.", "Rex, nazik ve dikkatli olabildiğini görünce kendine daha çok güvendi."]},
+                    { id: 'r7', title: 'Dinozor Hikayesi', sentences: ["Bir akşam, oyuncaklar birbirlerine hikayeler anlatıyorlardı.", "Sıra Rex'e geldiğinde, bildiği en iyi hikayeyi anlatmaya karar verdi.", "Milyonlarca yıl önce yaşayan dinozorların hikayesiydi bu.", "Triceratops'ları, Stegosaurus'ları anlattı.", "Sesi heyecanla titriyordu.", "Diğer oyuncaklar onu ağızları açık dinledi.", "Rex, dinozorlar hakkında ne kadar çok şey bildiğini gösterdi.", "Hikayesi bittiğinde herkes onu alkışladı.", "O sadece bir oyuncak değil, aynı zamanda bir dinozor uzmanıydı.", "Rex, bilgisiyle gurur duydu."]},
+                    { id: 'r8', title: 'Yeni Kostüm', sentences: ["Andy, Rex için kağıttan bir uzaylı kostümü yapmıştı.", "Rex, kostümü giymek istemiyordu çünkü komik göründüğünü düşünüyordu.", "Buzz, 'Harika görünüyorsun asker!' dedi.", "Jessie, 'Çok yakışmış!' diye ekledi.", "Arkadaşlarının desteğiyle Rex kostümü giydi.", "Aynada kendine baktı ve gülmeye başladı.", "Gerçekten de komik ama sevimli görünüyordu.", "O gün boyunca bir 'Dino-Uzaylı' olarak oyunlar oynadı.", "Farklı olmanın eğlenceli olabileceğini öğrendi."]},
+                    { id: 'r9', title: 'Resim Dersi', sentences: ["Oyuncaklar, Andy'nin boya kalemleriyle resim yapmaya karar verdiler.", "Rex, ne çizeceğini bilemiyordu.", "Woody bir kovboy şapkası çizdi, Jessie ise bir çiçek.", "Rex, küçük kollarıyla kalemi tutmakta zorlandı.", "Sonunda sadece renkli karalamalar yapabildi.", "Resmi bittiğinde biraz utandı.", "Ama Slinky, 'Rex, bu bir gökkuşağı fırtınası gibi! Harika!' dedi.", "Herkes onun resminin ne kadar neşeli olduğu konusunda hemfikirdi.", "Rex, herkesin sanatının farklı ve özel olduğunu anladı."]},
+                    { id: 'r10', title: 'İyi Bir Dinleyici', sentences: ["Küçük yeşil askerlerden biri oyun sırasında kaybolmuştu.", "Komutanı çok endişeliydi ve Rex'e dert yandı.", "Rex, ne yapacağını bilemese de sessizce onu dinledi.", "Askerin endişelerini ve korkularını anlattı.", "Rex sadece başını salladı ve 'Her şey yoluna girecek,' dedi.", "Sadece dinlenilmek bile komutanı rahatlatmıştı.", "Kısa bir süre sonra kayıp asker bulundu.", "Komutan, Rex'e teşekkür etti.", "Rex, bazen en iyi yardımın sadece iyi bir dinleyici olmak olduğunu öğrendi."]}
+                ]
+            },
+            {
+                id: 'slinky',
+                name: 'Slinky',
+                // KENDİ GÖRSELİNİ EKLEMEK İÇİN: Aşağıdaki linki kendi resminin linkiyle değiştir.
+                image: 'javascript:void(0)',
+                color: 'bg-orange-800',
+                highlightColor: 'bg-orange-900',
+                bgColor: 'bg-orange-100',
+                stories: [
+                    { id: 's1', title: 'Uzakta Kalan Top', sentences: [ "Sadık köpek Slinky, her zaman arkadaşlarını gözetirdi.", "Bir gün oyun oynarlarken, en sevdikleri kırmızı top kanepenin çok uzağına kaçtı.", "Hiçbir oyuncak oraya ulaşamıyordu.", "Herkes topun sonsuza dek kaybolduğunu düşünüp üzülmeye başladı.", "Ama Slinky'nin bir fikri vardı.", "Woody'ye, \"Arka bacaklarımı sen tut!\" dedi.", "Woody onu sıkıca tutarken, Slinky yayılan gövdesini kanepe altına doğru uzattı.", "Biraz daha, biraz daha derken burnuyla topa değmeyi başardı.", "Topu yavaşça kendine doğru itti ve kurtardı.", "Bütün oyuncaklar, Slinky'nin ne kadar harika ve yardımsever bir arkadaş olduğunu bir kez daha anladılar." ] },
+                    { id: 's2', title: 'Oyuncak Köprüsü', sentences: ["Oyuncaklardan biri, masanın üzerinde mahsur kalmıştı.", "Yere inmek için çok yüksekti.", "Diğerleri nasıl yardım edeceklerini düşünüyorlardı.", "Slinky, 'Ben bir köprü olabilirim!' dedi.", "Ön ayaklarını yatağa, arka ayaklarını masaya koydu.", "Gövdesini gererek arada bir köprü oluşturdu.", "Mahsur kalan oyuncak, Slinky'nin sırtından yürüyerek güvenle yatağa indi.", "Slinky, esnek vücudu sayesinde günü kurtarmıştı.", "O, odanın en güvenilir köprüsüydü.", "Herkes ona minnettardı."]},
+                    { id: 's3', title: 'Düğüm Macerası', sentences: ["Slinky, oynarken yanlışlıkla kendi etrafında dolandı.", "Yayı o kadar karışmıştı ki hareket edemiyordu.", "Tam bir düğüm haline gelmişti.", "Arkadaşları hemen yardıma koştu.", "Woody bir ucundan çekti, Buzz diğer ucundan itti.", "Ama düğüm daha da sıkılaştı.", "Sonunda yeşil askerler, organize bir şekilde çalışarak yayı açmayı başardılar.", "Her bir halkayı dikkatlice birbirinden ayırdılar.", "Slinky sonunda serbest kaldı ve rahat bir nefes aldı.", "Arkadaşları olmadan bunu başaramazdı."]},
+                    { id: 's4', title: 'Gizli Hazine', sentences: ["Slinky, bir köpek gibi harika bir koku alma duyusuna sahipti.", "Bir gün odada çok lezzetli bir koku aldı.", "Bu kokunun peşine düşmeye karar verdi.", "Burnunu yere yaklaştırarak kokuyu takip etti.", "Koku onu yatağın altına götürdü.", "Orada, Andy'nin unuttuğu bir paket bisküvi vardı.", "Slinky zaferle havladı ve diğer oyuncakları çağırdı.", "Herkes bu beklenmedik hazineye çok sevindi.", "O gün hayali bir bisküvi ziyafeti çektiler.", "Slinky'nin burnu onlara her zaman yol gösterirdi."]},
+                    { id: 's5', title: 'Merdiven İnişi', sentences: ["Slinky'nin en sevdiği şeylerden biri merdivenlerden inmekti.", "Önce ön ayaklarını bir basamağa koyardı.", "Sonra 'kıvrınk, kıvrınk, kıvrınk' sesiyle arka kısmı onu takip ederdi.", "Bu sesi duymak diğer oyuncakları her zaman güldürürdü.", "Bir gün en hızlı merdiven inme rekorunu kırmaya karar verdi.", "Yukarıdan kendini bıraktı ve hızla basamakları indi.", "Aşağı indiğinde yayı biraz başını döndürmüştü.", "Ama çok eğlenmişti.", "Diğer oyuncaklar onu alkışladı.", "Slinky, odanın en eğlenceli oyuncağıydı."]},
+                    { id: 's6', title: 'Sıcak Bir Yer', sentences: ["Soğuk bir kış günüydü.", "Oyuncaklar, sıcak bir yer arıyorlardı.", "Slinky, odada dolaşırken yere vuran bir güneş ışığı fark etti.", "Güneşin ısıttığı o noktaya kıvrılıp yattı.", "Kısa sürede sıcacık olmuştu.", "Diğer oyuncakları da yanına çağırdı.", "Hepsi birlikte güneşli noktada toplandılar.", "Sanki küçük bir kumsalda gibiydiler.", "Slinky, en basit şeylerin bile nasıl mutluluk verebileceğini biliyordu.", "O gün hep birlikte güneşin tadını çıkardılar."]},
+                    { id: 's7', title: 'İtfaiye Hortumu', sentences: ["Oyuncaklar, bir yangın söndürme oyunu oynuyorlardı.", "Yastıklardan yaptıkları bir ev 'yanıyordu'.", "Ama bir itfaiye hortumları yoktu.", "Slinky'nin aklına parlak bir fikir geldi.", "Bir ucunu musluğun altına (hayali olarak) tuttular.", "Diğer ucunu Woody, yanan eve doğru yöneltti.", "Slinky, kendini bir hortum gibi uzattı.", "Hayali suyla yangını söndürdüler.", "Slinky, her oyuna uyum sağlayabilen harika bir oyuncaktı.", "Onun sayesinde oyunları daha da gerçekçi oluyordu."]},
+                    { id: 's8', title: 'Sadık Dost', sentences: ["Woody, bir gün kendini biraz üzgün hissediyordu.", "Sessizce pencerenin önünde oturuyordu.", "Slinky, onun üzgün olduğunu fark etti.", "Yavaşça yanına geldi ve başını Woody'nin bacağına yasladı.", "Hiçbir şey söylemedi, sadece orada durdu.", "Woody, Slinky'nin başını okşadı ve gülümsedi.", "Bazen kelimelere gerek yoktu.", "İyi bir dostun varlığını hissetmek yeterliydi.", "Slinky, ne zaman ihtiyaç duyulsa oradaydı.", "O, gerçekten de bir insanın en iyi dostuydu."]},
+                    { id: 's9', title: 'Kuyruk Sallama', sentences: ["Slinky neşelendiğinde, arkasındaki küçük yaylı kuyruğu sallanırdı.", "Bir gün Jessie o kadar komik bir şaka yaptı ki, Slinky'nin kuyruğu kontrolden çıktı.", "O kadar hızlı sallanıyordu ki, etrafındaki küçük oyuncakları deviriyordu.", "Slinky ne kadar durmaya çalışsa da durduramadı.", "Herkes kahkahalarla gülüyordu.", "Sonunda sakinleşti ve kuyruğu yavaşladı.", "Utanarak devirdiği oyuncakları kaldırdı.", "Ama kimse ona kızmamıştı.", "Onun neşesi bulaşıcıydı.", "Herkes Slinky'nin mutlu olmasını seviyordu."]},
+                    { id: 's10', title: 'Gece Bekçisi', sentences: ["Tüm oyuncaklar uyurken, Slinky bazen uyanık kalırdı.", "Kendini odanın gece bekçisi olarak görüyordu.", "Yatağın altından odayı dinlerdi.", "Her şeyin yolunda olduğundan emin olurdu.", "Eğer bir tıkırtı duyarsa, sessizce kontrol ederdi.", "Genellikle sadece evin çıkardığı normal sesler olurdu.", "O, arkadaşlarının güvende uyuduğunu bilmekten mutlu olurdu.", "Slinky, sadık ve koruyucu bir arkadaştı.", "Sabah olduğunda, kimseye bir şey belli etmeden yerine geçerdi.", "Ama herkes onun sayesinde rahat uyuyordu."]}
+                ]
+            }
+        ];
+
+        // Gerekli HTML elementleri
+        const characterSelectionScreen = document.getElementById('character-selection-screen');
+        const storyListScreen = document.getElementById('story-list-screen');
+        const storyScreen = document.getElementById('story-screen');
+        
+        const characterGrid = document.getElementById('character-grid');
+        const storyListGrid = document.getElementById('story-list-grid');
+        const characterHeader = document.getElementById('character-header');
+
+        const storyTitle = document.getElementById('story-title');
+        const storyText = document.getElementById('story-text');
+        
+        const backToCharactersButton = document.getElementById('back-to-characters-button');
+        const backToStoryListButton = document.getElementById('back-to-story-list-button');
+        const body = document.body;
+
+        let currentSentences = [];
+        let currentSentenceIndex = 0;
+        let currentCharacter = null;
+        let currentStory = null;
+
+        // Karakter seçim ekranını oluşturma
+        function createCharacterSelectionScreen() {
+            characterGrid.innerHTML = '';
+            characters.forEach(char => {
+                const card = document.createElement('div');
+                card.className = `character-card cursor-pointer p-4 rounded-2xl text-white ${char.color} shadow-lg`;
+                card.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <img src="${char.image}" alt="${char.name}" class="w-24 h-24 rounded-full border-4 border-white object-cover flex-shrink-0">
+                        <div class="text-left">
+                            <h2 class="text-2xl font-bold">${char.name}</h2>
+                            <p class="font-light mt-1">${char.stories.length} Macera</p>
+                        </div>
+                    </div>
+                `;
+                card.addEventListener('click', () => showStoryList(char.id));
+                characterGrid.appendChild(card);
+            });
+        }
+        
+        // Hikaye listesi ekranını gösterme
+        function showStoryList(characterId) {
+            currentCharacter = characters.find(c => c.id === characterId);
+            if (!currentCharacter) return;
+
+            characterHeader.innerHTML = `
+                <img src="${currentCharacter.image}" alt="${currentCharacter.name}" class="w-32 h-32 mx-auto rounded-full border-4 border-white mb-4 object-cover shadow-lg">
+                <h1 class="text-4xl font-bold text-slate-800">${currentCharacter.name}'in Maceraları</h1>
+            `;
+            
+            storyListGrid.innerHTML = '';
+            currentCharacter.stories.forEach(story => {
+                const storyCard = document.createElement('div');
+                storyCard.className = `story-card cursor-pointer p-4 rounded-lg text-white text-center ${currentCharacter.color} shadow-md`;
+                storyCard.textContent = story.title;
+                storyCard.addEventListener('click', () => showStory(currentCharacter.id, story.id));
+                storyListGrid.appendChild(storyCard);
+            });
+
+            characterSelectionScreen.classList.add('hidden');
+            storyScreen.classList.add('hidden');
+            storyListScreen.classList.remove('hidden');
+            body.className = `${currentCharacter.bgColor} flex items-center justify-center min-h-screen p-4`;
+        }
+
+        // Hikaye okuma ekranını gösterme
+        function showStory(characterId, storyId) {
+            const character = characters.find(c => c.id === characterId);
+            if (!character) return;
+            currentStory = character.stories.find(s => s.id === storyId);
+            if (!currentStory) return;
+
+            storyTitle.textContent = currentStory.title;
+            storyText.innerHTML = '';
+            currentSentences = []; 
+
+            currentStory.sentences.forEach(sentenceText => {
+                const span = document.createElement('span');
+                span.className = 'sentence';
+                span.textContent = sentenceText + ' ';
+                storyText.appendChild(span);
+                currentSentences.push(span);
+            });
+            
+            currentSentenceIndex = 0;
+            updateHighlight();
+
+            storyListScreen.classList.add('hidden');
+            storyScreen.classList.remove('hidden');
+        }
+
+        // Cümle vurgusunu güncelleme
+        function updateHighlight() {
+            currentSentences.forEach((s, index) => {
+                s.classList.remove(currentCharacter.highlightColor, 'highlight', 'text-white');
+                if (index === currentSentenceIndex) {
+                    s.classList.add(currentCharacter.highlightColor, 'highlight', 'text-white');
+                }
+            });
+        }
+
+        function showCharacterSelectionScreen() {
+            storyListScreen.classList.add('hidden');
+            storyScreen.classList.add('hidden');
+            characterSelectionScreen.classList.remove('hidden');
+            body.className = 'bg-slate-100 flex items-center justify-center min-h-screen p-4';
+            currentCharacter = null;
+            currentStory = null;
+        }
+
+        // Klavye olayları
+        document.addEventListener('keydown', function(event) {
+            if (!currentStory || currentSentences.length === 0) return;
+
+            if (event.key === 'ArrowRight') {
+                if (currentSentenceIndex < currentSentences.length - 1) {
+                    currentSentenceIndex++;
+                    updateHighlight();
+                }
+            } else if (event.key === 'ArrowLeft') {
+                if (currentSentenceIndex > 0) {
+                    currentSentenceIndex--;
+                    updateHighlight();
+                }
+            }
+        });
+        
+        // Geri tuşları olayları
+        backToCharactersButton.addEventListener('click', showCharacterSelectionScreen);
+        backToStoryListButton.addEventListener('click', () => {
+            if (currentCharacter) {
+                showStoryList(currentCharacter.id);
+            }
+        });
+
+        // Başlangıç
+        createCharacterSelectionScreen();
+    </script>
+</body>
+</html>
+
+

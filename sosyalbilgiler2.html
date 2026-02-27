@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. Sınıf Sosyal Bilgiler: Birey, Toplum ve Kültür</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #FDFBF7;
+            color: #4A4A4A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 300px;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .active-tab {
+            border-bottom: 4px solid #F59E0B;
+            color: #B45309;
+            font-weight: 700;
+        }
+        .inactive-tab {
+            color: #9CA3AF;
+            border-bottom: 4px solid transparent;
+        }
+        .inactive-tab:hover {
+            color: #6B7280;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D1D5DB; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9CA3AF; 
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- Chosen Palette: "Warm Learning" - Background: Cream (#FDFBF7), Primary: Soft Teal (#2DD4BF), Accent: Amber/Orange (#F59E0B) -->
+    <!-- Application Structure Plan: Alphabetical labels (A-J) now applied to the definition list for better visual order. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-amber-100">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="text-3xl">🎒</span>
+                <h1 class="text-xl sm:text-2xl font-bold text-teal-600 tracking-tight">Sosyal Bilgiler <span class="text-amber-500">Kaşifi</span></h1>
+            </div>
+            <div id="user-display" class="hidden text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                Öğrenci: <span id="display-name-span"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl">
+        
+        <!-- Navigation -->
+        <nav id="app-nav" class="hidden mb-8 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center justify-center sm:justify-start">
+                <li class="mr-2">
+                    <button onclick="app.switchTab('matching')" id="tab-matching" class="active-tab inline-block p-4 rounded-t-lg transition-all duration-300">
+                        🧩 Kavram Eşleştirme
+                    </button>
+                </li>
+                <li class="mr-2">
+                    <button onclick="app.switchTab('quiz')" id="tab-quiz" class="inactive-tab inline-block p-4 rounded-t-lg transition-all duration-300">
+                        ❓ Bilgi Yarışması
+                    </button>
+                </li>
+                <li class="mr-2">
+                    <button onclick="app.switchTab('open-ended')" id="tab-open-ended" class="inactive-tab inline-block p-4 rounded-t-lg transition-all duration-300">
+                       ✍️ Düşüncelerim
+                    </button>
+                </li>
+                <li class="mr-2">
+                    <button onclick="app.finishExam()" id="tab-results" class="inactive-tab inline-block p-4 rounded-t-lg transition-all duration-300">
+                        🏆 Sonuçlarım
+                    </button>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- VIEWS -->
+
+        <!-- 1. Intro View -->
+        <section id="view-intro" class="fade-in max-w-2xl mx-auto text-center mt-12">
+            <div class="bg-white p-8 rounded-2xl shadow-xl border-2 border-teal-50">
+                <div class="text-6xl mb-6">👋</div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Merhaba Genç Kaşif!</h2>
+                <p class="text-lg text-gray-600 mb-8">
+                    4. Sınıf Sosyal Bilgiler çalışma etkinliğine hoş geldin. <br>
+                    Hazırsan ismini yaz ve başlayalım!
+                </p>
+                <div class="flex flex-col items-center space-y-4">
+                    <input type="text" id="student-name" placeholder="Adın ve Soyadın" 
+                        class="w-full max-w-sm px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 transition-all outline-none text-center text-lg">
+                    <button onclick="app.startApp()" 
+                        class="w-full max-w-sm bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform transition hover:scale-105">
+                        Başla 🚀
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Matching View -->
+        <section id="view-matching" class="hidden fade-in">
+            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6 rounded-r shadow-sm">
+                <h3 class="font-bold text-indigo-700 text-lg">Nasıl Oynanır?</h3>
+                <p class="text-sm text-indigo-600">
+                    Soldaki listeden bir <strong>Kavram</strong> seç, sonra sağdaki listeden onun <strong>Açıklamasını</strong> bulup tıkla.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 select-none">
+                <div class="space-y-3">
+                    <h4 class="text-center font-bold text-gray-500 mb-2">Kavramlar</h4>
+                    <div id="terms-container" class="space-y-3"></div>
+                </div>
+                <div class="space-y-3">
+                    <h4 class="text-center font-bold text-gray-500 mb-2">Açıklamalar</h4>
+                    <div id="definitions-container" class="space-y-3"></div>
+                </div>
+            </div>
+            
+            <div id="matching-feedback" class="text-center mt-8 h-8 font-bold text-xl transition-all duration-300"></div>
+        </section>
+
+        <!-- 3. Quiz View -->
+        <section id="view-quiz" class="hidden fade-in">
+            <div id="quiz-container" class="grid grid-cols-1 gap-6"></div>
+        </section>
+
+        <!-- 4. Open Ended View -->
+        <section id="view-open-ended" class="hidden fade-in">
+            <div id="open-ended-container" class="space-y-8"></div>
+        </section>
+
+        <!-- 5. Results View -->
+        <section id="view-results" class="hidden fade-in pb-12">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-800">Tebrikler <span id="result-name" class="text-teal-600"></span>! 🎉</h2>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-700 mb-4 text-center">Başarı Durumu</h3>
+                    <div class="chart-container">
+                        <canvas id="scoreChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <p class="text-2xl font-bold text-gray-800">Toplam Puan: <span id="total-score" class="text-teal-600">0</span> / 100</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                        <span class="mr-2">📝</span> Yazılı Cevapların
+                    </h3>
+                    <div id="answers-review" class="space-y-4 max-h-[400px] overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+            
+            <div class="mt-10 text-center">
+                <button onclick="location.reload()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-8 rounded-lg shadow transition">
+                    🔄 Baştan Başla
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
+        <div class="container mx-auto px-4 text-center text-gray-400 text-sm">
+            <p>4. Sınıf Sosyal Bilgiler Çalışma Etkinliği</p>
+        </div>
+    </footer>
+
+    <script>
+        const matchingData = [
+            { id: 1, term: "Nüfus Cüzdanı", correctDef: "Resmi kimlik belgemizdir." },
+            { id: 2, term: "Kronoloji", correctDef: "Olayların oluş sırasına göre dizilmesidir." },
+            { id: 3, term: "Kroki", correctDef: "Bir yerin kuş bakışı görünümünün kabataslak çizimidir." },
+            { id: 4, term: "Pusula", correctDef: "Yön bulmamıza yarayan araçtır." },
+            { id: 5, term: "Şerife Bacı", correctDef: "Milli Mücadele’nin kadın kahramanlarından biridir." },
+            { id: 6, term: "Empati", correctDef: "Bir kimsenin kendisini başkasının yerine koymasıdır." },
+            { id: 7, term: "Gelenek", correctDef: "Toplumda eskiden kalmış, kuşaktan kuşağa iletilen alışkanlıklar." },
+            { id: 8, term: "Rakım", correctDef: "Bir yerin deniz seviyesinden yüksekliğidir." },
+            { id: 9, term: "Ana Yönler", correctDef: "Doğu, Batı, Kuzey ve Güney'dir." },
+            { id: 10, term: "Milli Kültür", correctDef: "Bir millete ait maddi ve manevi değerlerin bütünüdür." }
+        ];
+
+        const quizData = [
+            { id: 1, question: "Yeni T.C. Kimlik kartlarında bulunan 'çip' kısmında hangisi yer almaz?", options: ["Parmak izi", "Kan grubu", "Ev adresi"], correct: 2 },
+            { id: 2, question: "Aşağıdakilerden hangisi doğuştan sahip olduğumuz bir özelliktir?", options: ["Kitap okuma", "Göz rengi", "Bisiklet sürme"], correct: 1 },
+            { id: 3, question: "Kurtuluş Savaşı'nın başlangıcı kabul edilen olay hangisidir?", options: ["Samsun’a çıkış", "Cumhuriyet ilanı", "TBMM’nin açılması"], correct: 0 },
+            { id: 4, question: "Pusulanın renkli ucu her zaman hangi yönü gösterir?", options: ["Güney", "Doğu", "Kuzey"], correct: 2 },
+            { id: 5, question: "Geleneksel çocuk oyunlarımızdan hangisi taşlarla oynanır?", options: ["Beştaş", "Satranç", "Basketbol"], correct: 0 },
+            { id: 6, question: "Aşağıdakilerden hangisi bir hava olayıdır?", options: ["Deprem", "Sis", "Heyelan"], correct: 1 },
+            { id: 7, question: "Hava durumunu öğrenmek için hangisini izlemeliyiz?", options: ["Belgesel", "Meteoroloji raporu", "Spor haberleri"], correct: 1 },
+            { id: 8, question: "T.C. Kimlik numarası kaç hanelidir?", options: ["10", "11", "12"], correct: 1 },
+            { id: 9, question: "Doğada yön bulmak için hangisinden yararlanabiliriz?", options: ["Karınca yuvaları", "Ağaç yosunları", "Çiçek renkleri"], correct: 1 },
+            { id: 10, question: "Milli Mücadele Doğu Cephesi komutanı kimdir?", options: ["Kazım Karabekir", "İsmet İnönü", "Fevzi Çakmak"], correct: 0 }
+        ];
+
+        const openEndedData = [
+            "Arkadaşın üzgünken empati kurarak ona nasıl yaklaşırsın?",
+            "Aile tarihini araştırırken hangi kaynaklardan yararlanabilirsin?",
+            "Doğal varlık ve beşerî unsurlara ikişer örnek veriniz.",
+            "Milli kültürümüzden yemek ve halk oyunu örnekleri yazınız.",
+            "Teknolojinin bilinçsiz kullanımının aile içi iletişime etkileri nelerdir?"
+        ];
+
+        const app = {
+            state: {
+                studentName: "",
+                selectedTermId: null,
+                correctMatches: 0,
+                quizAnswers: {},
+                openAnswers: {},
+            },
+
+            startApp: () => {
+                const name = document.getElementById('student-name').value.trim();
+                if (!name) return alert("Lütfen ismini gir.");
+                app.state.studentName = name;
+                document.getElementById('display-name-span').innerText = name;
+                document.getElementById('user-display').classList.remove('hidden');
+                document.getElementById('view-intro').classList.add('hidden');
+                document.getElementById('app-nav').classList.remove('hidden');
+                app.switchTab('matching');
+            },
+
+            switchTab: (tabId) => {
+                ['view-matching', 'view-quiz', 'view-open-ended', 'view-results'].forEach(v => document.getElementById(v).classList.add('hidden'));
+                ['tab-matching', 'tab-quiz', 'tab-open-ended', 'tab-results'].forEach(t => {
+                    const el = document.getElementById(t);
+                    el.classList.replace('active-tab', 'inactive-tab');
+                });
+                document.getElementById(`view-${tabId}`).classList.remove('hidden');
+                document.getElementById(`tab-${tabId}`).classList.replace('inactive-tab', 'active-tab');
+            },
+
+            initMatching: () => {
+                const termsBox = document.getElementById('terms-container');
+                const defsBox = document.getElementById('definitions-container');
+                
+                // Shuffle definitions and then apply alphabetical labels A-J
+                const shuffled = [...matchingData].sort(() => Math.random() - 0.5);
+                const alphabet = "ABCDEFGHIJ".split("");
+
+                matchingData.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "p-4 bg-white border-2 border-gray-200 rounded-lg cursor-pointer hover:border-teal-400 transition term-card";
+                    div.dataset.id = item.id;
+                    div.innerHTML = `<span class="font-bold text-teal-700">${item.id}.</span> ${item.term}`;
+                    div.onclick = () => app.handleTermClick(item.id, div);
+                    termsBox.appendChild(div);
+                });
+
+                shuffled.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = "p-4 bg-white border-2 border-gray-200 rounded-lg cursor-pointer hover:border-indigo-400 transition def-card";
+                    div.dataset.correctId = item.id;
+                    div.innerHTML = `<span class="font-bold text-indigo-700">${alphabet[index]})</span> ${item.correctDef}`;
+                    div.onclick = () => app.handleDefClick(item.id, div);
+                    defsBox.appendChild(div);
+                });
+            },
+
+            handleTermClick: (id, el) => {
+                if (el.classList.contains('bg-green-100')) return;
+                document.querySelectorAll('.term-card').forEach(c => {
+                    if (!c.classList.contains('bg-green-100')) {
+                        c.classList.remove('border-teal-500', 'bg-teal-50', 'ring-2', 'ring-teal-200');
+                    }
+                });
+                app.state.selectedTermId = id;
+                el.classList.add('border-teal-500', 'bg-teal-50', 'ring-2', 'ring-teal-200');
+            },
+
+            handleDefClick: (correctId, el) => {
+                if (!app.state.selectedTermId || el.classList.contains('bg-green-100')) return;
+                if (app.state.selectedTermId === correctId) {
+                    const termEl = document.querySelector(`.term-card[data-id="${correctId}"]`);
+                    termEl.className = "p-4 bg-green-100 border-green-500 text-green-800 rounded-lg term-card";
+                    termEl.innerHTML += " ✅";
+                    el.className = "p-4 bg-green-100 border-green-500 text-green-800 rounded-lg def-card";
+                    el.innerHTML += " ✅";
+                    app.state.correctMatches++;
+                    app.state.selectedTermId = null;
+                    app.showFeedback("Doğru!", "text-green-600");
+                } else {
+                    app.showFeedback("Tekrar dene!", "text-red-500");
+                }
+            },
+
+            showFeedback: (msg, cls) => {
+                const f = document.getElementById('matching-feedback');
+                f.innerText = msg;
+                f.className = `text-center mt-8 h-8 font-bold text-xl ${cls}`;
+            },
+
+            initQuiz: () => {
+                const container = document.getElementById('quiz-container');
+                quizData.forEach((q, idx) => {
+                    const div = document.createElement('div');
+                    div.className = "bg-white p-6 rounded-xl shadow border border-gray-100 card-hover";
+                    const labels = ['A', 'B', 'C'];
+                    const opts = q.options.map((o, i) => `
+                        <label class="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-blue-50 transition">
+                            <input type="radio" name="q-${q.id}" onchange="app.state.quizAnswers[${q.id}]=${i}" class="form-radio h-5 w-5 text-blue-600">
+                            <span class="font-bold text-blue-500">${labels[i]})</span>
+                            <span class="text-gray-700">${o}</span>
+                        </label>
+                    `).join('');
+                    div.innerHTML = `<h4 class="text-lg font-bold mb-4">${idx+1}. ${q.question}</h4><div class="space-y-2">${opts}</div>`;
+                    container.appendChild(div);
+                });
+            },
+
+            initOpenEnded: () => {
+                const container = document.getElementById('open-ended-container');
+                openEndedData.forEach((q, idx) => {
+                    const div = document.createElement('div');
+                    div.className = "bg-white p-6 rounded-xl shadow border border-amber-100";
+                    div.innerHTML = `<label class="block mb-3 text-lg font-medium">${idx+1}. ${q}</label>
+                        <textarea oninput="app.state.openAnswers[${idx}]=this.value" class="w-full p-4 border rounded-lg h-32 resize-none outline-none focus:ring-2 focus:ring-amber-200"></textarea>`;
+                    container.appendChild(div);
+                });
+            },
+
+            finishExam: () => {
+                app.switchTab('results');
+                let quizCorrect = 0;
+                quizData.forEach(q => { if(app.state.quizAnswers[q.id] === q.correct) quizCorrect++; });
+                const total = (app.state.correctMatches + quizCorrect) * 5;
+                document.getElementById('result-name').innerText = app.state.studentName;
+                document.getElementById('total-score').innerText = total;
+                app.renderChart(app.state.correctMatches + quizCorrect, 20 - (app.state.correctMatches + quizCorrect));
+                const rev = document.getElementById('answers-review');
+                rev.innerHTML = openEndedData.map((q, i) => `<div class="mb-4"><p class="font-bold text-sm">${i+1}. ${q}</p><p class="bg-gray-50 p-2 rounded text-sm italic">${app.state.openAnswers[i] || "Cevapsız"}</p></div>`).join('');
+            },
+
+            renderChart: (c, i) => {
+                new Chart(document.getElementById('scoreChart'), {
+                    type: 'doughnut',
+                    data: { labels: ['Doğru', 'Yanlış'], datasets: [{ data: [c, i], backgroundColor: ['#10B981', '#E5E7EB'] }] },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => { app.initMatching(); app.initQuiz(); app.initOpenEnded(); });
+    </script>
+</body>
+</html>

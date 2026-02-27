@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hece Birleştirme ve Kelime Oluşturma Oyunu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            touch-action: manipulation; /* Disable double-tap zoom on mobile */
+        }
+        .syllable {
+            transition: all 0.3s ease-in-out;
+            transform: scale(1);
+        }
+        .syllable:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .syllable-slot {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e5e7eb;
+            border: 2px dashed #9ca3af;
+        }
+        .correct-word {
+            animation: bounce 0.6s ease;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-20px);
+            }
+            60% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-amber-50 text-gray-800 flex items-center justify-center min-h-screen">
+
+    <div id="app-container" class="w-full max-w-3xl mx-auto p-4 md:p-8 bg-white rounded-2xl shadow-2xl text-center">
+        
+        <h1 class="text-3xl md:text-5xl font-black text-amber-600 mb-2">Kelime Fabrikası</h1>
+        <p class="text-lg md:text-xl text-gray-500 mb-8">Heceleri birleştirerek kelimeyi oluştur!</p>
+
+        <!-- Kelimenin oluşturulacağı alan -->
+        <div id="word-output-container" class="mb-10 min-h-[80px] md:min-h-[120px] bg-amber-100 rounded-2xl flex items-center justify-center flex-wrap gap-2 p-4">
+            <!-- Oluşturulan kelime veya boş kutular buraya gelecek -->
+        </div>
+        
+        <!-- Karışık hecelerin bulunduğu alan -->
+        <div id="syllables-container" class="mb-10 min-h-[80px] md:min-h-[120px] flex items-center justify-center gap-2 md:gap-4 flex-wrap p-4">
+            <!-- Renkli heceler buraya gelecek -->
+        </div>
+        
+        <!-- Kontrol Butonları ve Mesajlar -->
+        <div class="flex flex-col items-center justify-center min-h-[100px]">
+             <div id="message-container" class="text-2xl font-bold mb-4 h-8">
+                <!-- Başarı mesajları burada görünecek -->
+             </div>
+             <button id="reset-button" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg text-xl transition-transform duration-200 hover:scale-105 mr-4 hidden">
+                <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                Baştan Başla
+             </button>
+             <button id="next-word-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg text-2xl transition-transform duration-200 hover:scale-105 shadow-lg hidden">
+                Yeni Kelime
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block ml-2"><path d="m9 18 6-6-6-6"/></svg>
+             </button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const twoSyllableWords = [
+                { word: "ada", syllables: ["a", "da"] }, { word: "ela", syllables: ["e", "la"] },
+                { word: "anne", syllables: ["an", "ne"] }, { word: "gece", syllables: ["ge", "ce"] },
+                { word: "ezgi", syllables: ["ez", "gi"] }, { word: "alet", syllables: ["a", "let"] },
+                { word: "elli", syllables: ["el", "li"] }, { word: "masa", syllables: ["ma", "sa"] },
+                { word: "sıra", syllables: ["sı", "ra"] }, { word: "kalem", syllables: ["ka", "lem"] },
+                { word: "silgi", syllables: ["sil", "gi"] }, { word: "suluk", syllables: ["su", "luk"] },
+                { word: "kasa", syllables: ["ka", "sa"] }, { word: "yüzmek", syllables: ["yüz", "mek"] },
+                { word: "arı", syllables: ["a", "rı"] }, { word: "limon", syllables: ["li", "mon"] },
+                { word: "baba", syllables: ["ba", "ba"] }, { word: "kedi", syllables: ["ke", "di"] },
+                { word: "köpek", syllables: ["kö", "pek"] }, { word: "elma", syllables: ["el", "ma"] },
+                { word: "sütlaç", syllables: ["süt", "laç"] }, { word: "çiçek", syllables: ["çi", "çek"] },
+                { word: "deniz", syllables: ["de", "niz"] }, { word: "güneş", syllables: ["gü", "neş"] },
+                { word: "tavuk", syllables: ["ta", "vuk"] }, { word: "balık", syllables: ["ba", "lık"] },
+                { word: "şeker", syllables: ["şe", "ker"] }, { word: "toprak", syllables: ["top", "rak"] },
+                { word: "sandal", syllables: ["san", "dal"] }, { word: "kapı", syllables: ["ka", "pı"] },
+                { word: "lamba", syllables: ["lam", "ba"] }
+            ];
+            const threeSyllableWords = [
+                { word: "araba", syllables: ["a", "ra", "ba"] }, { word: "elbise", syllables: ["el", "bi", "se"] },
+                { word: "ileri", syllables: ["i", "le", "ri"] }, { word: "çalışkan", syllables: ["ça", "lış", "kan"] },
+                { word: "portakal", syllables: ["por", "ta", "kal"] }, { word: "oyuncak", syllables: ["o", "yun", "cak"] },
+                { word: "baloncu", syllables: ["ba", "lon", "cu"] }, { word: "gözleme", syllables: ["göz", "le", "me"] },
+                { word: "uçurtma", syllables: ["u", "çurt", "ma"] }, { word: "kitaplık", syllables: ["ki", "tap", "lık"] },
+                { word: "ıspanak", syllables: ["ıs", "pa", "nak"] }, { word: "öğretmen", syllables: ["öğ", "ret", "men"] },
+                { word: "dondurma", syllables: ["don", "dur", "ma"] }, { word: "kelebek", syllables: ["ke", "le", "bek"] },
+                { word: "domates", syllables: ["do", "ma", "tes"] }, { word: "patates", syllables: ["pa", "ta", "tes"] },
+                { word: "şemsiye", syllables: ["şem", "si", "ye"] }, { word: "fırıncı", syllables: ["fı", "rın", "cı"] }
+            ];
+            const fourSyllableWords = [
+                { word: "matematik", syllables: ["ma", "te", "ma", "tik"] },
+                { word: "bilgisayar", syllables: ["bil", "gi", "sa", "yar"] },
+                { word: "televizyon", syllables: ["te", "le", "viz", "yon"] },
+                { word: "karnabahar", syllables: ["kar", "na", "ba", "har"] },
+                { word: "ayakkabı", syllables: ["a", "yak", "ka", "bı"] },
+                { word: "hanımeli", syllables: ["ha", "nı", "me", "li"] }
+            ];
+
+            const syllablesContainer = document.getElementById('syllables-container');
+            const wordOutputContainer = document.getElementById('word-output-container');
+            const nextWordButton = document.getElementById('next-word-button');
+            const resetButton = document.getElementById('reset-button');
+            const messageContainer = document.getElementById('message-container');
+
+            let words = [];
+            let currentWordIndex = 0;
+            let currentSyllables = [];
+            let chosenSyllables = [];
+            
+            const colors = [
+                'bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 
+                'bg-purple-400', 'bg-pink-400', 'bg-indigo-400', 'bg-teal-400'
+            ];
+
+            function shuffle(array) {
+                // Orijinal diziyi değiştirmemek için bir kopyasını oluşturuyoruz.
+                let shuffled = [...array]; 
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            }
+
+            function createWordList() {
+                 words = [
+                    ...shuffle(twoSyllableWords),
+                    ...shuffle(threeSyllableWords),
+                    ...shuffle(fourSyllableWords)
+                ];
+            }
+
+            function setupWord() {
+                if (currentWordIndex >= words.length) {
+                    syllablesContainer.innerHTML = '';
+                    wordOutputContainer.innerHTML = '';
+                    messageContainer.textContent = 'Oyun bitti, harikasın!';
+                    messageContainer.classList.add('text-green-600');
+                    nextWordButton.classList.add('hidden');
+                    resetButton.classList.remove('hidden');
+                    resetButton.onclick = () => {
+                        currentWordIndex = 0;
+                        createWordList();
+                        setupWord();
+                        resetButton.classList.add('hidden');
+                    };
+                    return;
+                }
+
+                chosenSyllables = [];
+                const wordData = words[currentWordIndex];
+                currentSyllables = [...wordData.syllables];
+                const shuffledSyllables = shuffle([...wordData.syllables]);
+                
+                syllablesContainer.innerHTML = '';
+                wordOutputContainer.innerHTML = '';
+                messageContainer.textContent = '';
+                nextWordButton.classList.add('hidden');
+
+                // Boş kutuları oluştur
+                wordData.syllables.forEach(() => {
+                    const slot = document.createElement('div');
+                    slot.className = 'syllable-slot w-20 h-20 md:w-28 md:h-28 rounded-xl';
+                    wordOutputContainer.appendChild(slot);
+                });
+                
+                // Karışık heceleri oluştur
+                shuffledSyllables.forEach((syllable, index) => {
+                    const syllableEl = document.createElement('div');
+                    syllableEl.textContent = syllable;
+                    const color = colors[index % colors.length];
+                    syllableEl.className = `${color} text-white text-3xl md:text-5xl font-bold w-20 h-20 md:w-28 md:h-28 rounded-xl flex items-center justify-center cursor-pointer syllable shadow-md`;
+                    syllableEl.dataset.syllable = syllable;
+                    
+                    syllableEl.addEventListener('click', () => handleSyllableClick(syllableEl));
+                    syllablesContainer.appendChild(syllableEl);
+                });
+            }
+            
+            function handleSyllableClick(element) {
+                if(element.style.visibility === 'hidden') return;
+                
+                const syllable = element.dataset.syllable;
+                chosenSyllables.push(syllable);
+                element.style.visibility = 'hidden'; // Tıklanan heceyi gizle
+                
+                updateWordOutput();
+
+                if (chosenSyllables.length === currentSyllables.length) {
+                    checkWord();
+                }
+            }
+            
+            function updateWordOutput() {
+                 wordOutputContainer.innerHTML = '';
+                 // Seçilen heceleri göster
+                 chosenSyllables.forEach((syl, index) => {
+                    const syllableEl = document.createElement('div');
+                    syllableEl.textContent = syl;
+                    
+                    const originalSyllable = Array.from(syllablesContainer.children).find(child => child.dataset.syllable === syl);
+                    let colorClass = 'bg-gray-400';
+                     if(originalSyllable) {
+                         const matchingColor = originalSyllable.className.split(' ').find(c => c.startsWith('bg-'));
+                         if(matchingColor) colorClass = matchingColor;
+                     }
+
+                    syllableEl.className = `${colorClass} text-white text-3xl md:text-5xl font-bold w-20 h-20 md:w-28 md:h-28 rounded-xl flex items-center justify-center`;
+                    wordOutputContainer.appendChild(syllableEl);
+                 });
+                 // Kalan boşlukları göster
+                 const remainingSlots = currentSyllables.length - chosenSyllables.length;
+                 for(let i = 0; i < remainingSlots; i++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'syllable-slot w-20 h-20 md:w-28 md:h-28 rounded-xl';
+                    wordOutputContainer.appendChild(slot);
+                 }
+            }
+
+            function checkWord() {
+                const formedWord = chosenSyllables.join('');
+                const correctWord = currentSyllables.join('');
+
+                if (formedWord === correctWord) {
+                    // Başarılı
+                    setTimeout(() => {
+                        wordOutputContainer.innerHTML = '';
+                        const finalWordEl = document.createElement('div');
+                        finalWordEl.textContent = correctWord;
+                        finalWordEl.className = 'bg-green-500 text-white text-4xl md:text-6xl font-black py-6 px-10 rounded-2xl correct-word';
+                        wordOutputContainer.appendChild(finalWordEl);
+
+                        messageContainer.textContent = 'Harika!';
+                        messageContainer.className = 'text-2xl font-bold mb-4 h-8 text-green-600';
+                        nextWordButton.classList.remove('hidden');
+                    }, 300);
+                } else {
+                    // Başarısız, tekrar denemesi için sıfırla
+                    setTimeout(() => {
+                        messageContainer.textContent = 'Tekrar dene!';
+                        messageContainer.className = 'text-2xl font-bold mb-4 h-8 text-red-500';
+                        // Heceleri geri getir
+                        setTimeout(() => {
+                             setupWord();
+                        }, 1200);
+                    }, 300);
+                }
+            }
+
+            nextWordButton.addEventListener('click', () => {
+                currentWordIndex++;
+                setupWord();
+            });
+            
+            // Oyunu başlat
+            createWordList();
+            setupWord();
+        });
+    </script>
+</body>
+</html>
+
